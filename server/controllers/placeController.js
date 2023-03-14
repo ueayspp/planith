@@ -1,10 +1,9 @@
 require('dotenv').config()
 
-// axios
 const axios = require('axios')
 
-// API_KEY
-const apiKey = process.env.API_KEY
+const API_KEY = process.env.API_KEY
+const TEXT_SEARCH_URL = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
 
 // GET all places
 const getPlaces = async (req, res) => {
@@ -20,16 +19,25 @@ const getPlace = async (req, res) => {
 // Search a place
 const searchPlace = async (req, res) => {
   const query = req.params.query
-  // const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${query}&inputtype=textquery&fields=place_id&language=th&key=${apiKey}`
-  const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?input=${query}&type=tourist_attraction&language=th&key=${apiKey}`
 
-  try {
-    const response = await axios.get(url)
-    res.send(response.data.results)
-  } catch (error) {
-    console.log(error)
-    res.status(500).send(error)
-  }
+  axios
+    .get(TEXT_SEARCH_URL, {
+      method: 'get',
+      headers: {},
+      params: {
+        key: API_KEY,
+        input: query,
+        type: 'tourist_attraction',
+        language: 'th',
+      },
+    })
+    .then(function (response) {
+      console.log(JSON.stringify(response.data))
+      res.send(response.data.results)
+    })
+    .catch(function (error) {
+      console.log(error)
+    })
 }
 
 module.exports = {

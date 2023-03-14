@@ -4,6 +4,15 @@
   font-family: 'Kanit', sans-serif;
 }
 
+a,
+a:hover,
+a:active,
+a:visited,
+a:focus {
+  font-size: large;
+  text-decoration: none;
+}
+
 /* body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',

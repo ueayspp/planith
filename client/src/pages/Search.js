@@ -1,23 +1,29 @@
-// import axios from 'axios'
+import axios from 'axios'
 import { useState } from 'react'
 
 function Search() {
   const [query, setQuery] = useState('')
   const [places, setPlaces] = useState([])
+  const [loading, setLoading] = useState(false)
 
+  // Search Places
   async function handleSearch(event) {
+    setLoading(true)
     event.preventDefault()
+
     try {
-      const response = await fetch(`/api/places/${query}`)
-      const data = await response.json()
-      setPlaces(data)
+      const response = await axios.get(`/api/places/${query}`)
+      setPlaces(response.data)
+      setLoading(false)
     } catch (error) {
       console.log(error)
+      setLoading(false)
     }
   }
 
   return (
     <div>
+      <h1>ค้นหาสถานที่</h1>
       <form onSubmit={handleSearch}>
         <label htmlFor="query">Text Search</label>
         <br />
@@ -30,11 +36,18 @@ function Search() {
         <button type="submit">ค้นหา</button>
       </form>
 
-      <ul>
-        {places.map((place) => (
-          <li key={place.place_id}>{place.name}</li>
-        ))}
-      </ul>
+      {loading ? (
+        <p>กำลังโหลด...</p>
+      ) : (
+        <>
+          {places.map((place) => (
+            <div key={place.place_id}>
+              <p>{place.name}</p>
+              <p>{place.formatted_address}</p>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   )
 }
