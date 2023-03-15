@@ -8,7 +8,7 @@ function Navbar() {
         หน้าหลัก
       </Link>
       &nbsp;
-      <Link to="/place" className="nav-item">
+      <Link to="/search" className="nav-item">
         ค้นหาสถานที่
       </Link>
     </div>

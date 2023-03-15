@@ -18,21 +18,19 @@ const getPlace = async (req, res) => {
 
 // Search a place
 const searchPlace = async (req, res) => {
-  const query = req.params.query
+  const input = req.query.input
 
   axios
     .get(TEXT_SEARCH_URL, {
-      method: 'get',
-      headers: {},
       params: {
         key: API_KEY,
-        input: query,
+        input: input,
         type: 'tourist_attraction',
         language: 'th',
       },
     })
     .then(function (response) {
-      console.log(JSON.stringify(response.data))
+      // console.log(JSON.stringify(response.data))
       res.send(response.data.results)
     })
     .catch(function (error) {

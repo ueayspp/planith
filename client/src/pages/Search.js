@@ -11,8 +11,12 @@ function Search() {
     setLoading(true)
     event.preventDefault()
 
+    const params = {
+      input: query,
+    }
+
     try {
-      const response = await axios.get(`/api/places/${query}`)
+      const response = await axios.get('/api/places/', { params })
       setPlaces(response.data)
       setLoading(false)
     } catch (error) {

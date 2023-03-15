@@ -12,6 +12,6 @@ const router = express.Router()
 // router.get('/:name', getPlace)
 
 // Search a place
-router.get('/:query', searchPlace)
+router.get('/', searchPlace)
 
 module.exports = router
