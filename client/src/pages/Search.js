@@ -4,6 +4,7 @@ import { useState } from 'react'
 function Search() {
   const [query, setQuery] = useState('')
   const [places, setPlaces] = useState([])
+  const [nextPageToken, setNextPageToken] = useState(null)
   const [loading, setLoading] = useState(false)
 
   // Search Places
@@ -17,7 +18,30 @@ function Search() {
 
     try {
       const response = await axios.get('/api/places/', { params })
-      setPlaces(response.data)
+      setPlaces(response.data.results)
+      setNextPageToken(response.data.nextPageToken)
+      setLoading(false)
+    } catch (error) {
+      console.log(error)
+      setLoading(false)
+    }
+  }
+
+  // Next Page
+  async function handleNextPage(event) {
+    setLoading(true)
+    event.preventDefault()
+
+    console.log('Next page token= ', nextPageToken)
+
+    const params = {
+      pagetoken: nextPageToken,
+    }
+
+    try {
+      const response = await axios.get('/api/places/', { params })
+      setPlaces([...places, ...response.data.results])
+      setNextPageToken(response.data.nextPageToken)
       setLoading(false)
     } catch (error) {
       console.log(error)
@@ -52,6 +76,8 @@ function Search() {
           ))}
         </>
       )}
+
+      {nextPageToken && <button onClick={handleNextPage}>โหลดเพิ่ม</button>}
     </div>
   )
 }

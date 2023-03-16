@@ -19,19 +19,26 @@ const getPlace = async (req, res) => {
 // Search a place
 const searchPlace = async (req, res) => {
   const input = req.query.input
+  const pagetoken = req.query.pagetoken
+
+  const params = {
+    key: API_KEY,
+    input: input,
+    type: 'tourist_attraction',
+    language: 'th',
+  }
+
+  if (pagetoken) {
+    params.pagetoken = pagetoken
+  }
 
   axios
-    .get(TEXT_SEARCH_URL, {
-      params: {
-        key: API_KEY,
-        input: input,
-        type: 'tourist_attraction',
-        language: 'th',
-      },
-    })
+    .get(TEXT_SEARCH_URL, { params })
     .then(function (response) {
+      const results = response.data.results
+      const nextPageToken = response.data.next_page_token
       // console.log(JSON.stringify(response.data))
-      res.send(response.data.results)
+      res.send({ results, nextPageToken })
     })
     .catch(function (error) {
       console.log(error)
