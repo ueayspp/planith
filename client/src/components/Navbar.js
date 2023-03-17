@@ -11,6 +11,10 @@ function Navbar() {
       <Link to="/search" className="nav-item">
         ค้นหาสถานที่
       </Link>
+      &nbsp;
+      <Link to="/planner" className="nav-item">
+        จัดแพลนเนอร์
+      </Link>
     </div>
   )
 }

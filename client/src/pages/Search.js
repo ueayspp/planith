@@ -49,6 +49,15 @@ function Search() {
     }
   }
 
+  // Select Place
+  // store selectedPlace to localStorage
+  const selectedPlace = []
+  const value = { cart: selectedPlace, currentUser: 'ueay' }
+  async function handleSelect(place) {
+    selectedPlace.push(place)
+    localStorage.setItem('selectedPlace', JSON.stringify(value))
+  }
+
   return (
     <div>
       <h1>ค้นหาสถานที่</h1>
@@ -72,6 +81,7 @@ function Search() {
             <div key={place.place_id}>
               <p>{place.name}</p>
               <p>{place.formatted_address}</p>
+              <button onClick={() => handleSelect(place)}>เลือก</button>
             </div>
           ))}
         </>
