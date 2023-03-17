@@ -1,11 +1,18 @@
 import axios from 'axios'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function Search() {
   const [query, setQuery] = useState('')
   const [places, setPlaces] = useState([])
   const [nextPageToken, setNextPageToken] = useState(null)
   const [loading, setLoading] = useState(false)
+
+  const [selectedPlace, setSelectedPlace] = useState([])
+
+  useEffect(() => {
+    const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || []
+    setSelectedPlace(selectedPlaceData.cart)
+  }, [])
 
   // Search Places
   async function handleSearch(event) {
@@ -32,7 +39,7 @@ function Search() {
     setLoading(true)
     event.preventDefault()
 
-    console.log('Next page token= ', nextPageToken)
+    // console.log('Next page token= ', nextPageToken)
 
     const params = {
       pagetoken: nextPageToken,
@@ -51,11 +58,14 @@ function Search() {
 
   // Select Place
   // store selectedPlace to localStorage
-  const selectedPlace = []
-  const value = { cart: selectedPlace, currentUser: 'ueay' }
+
   async function handleSelect(place) {
-    selectedPlace.push(place)
-    localStorage.setItem('selectedPlace', JSON.stringify(value))
+    const updatedSelectedPlace = [...selectedPlace, place]
+    setSelectedPlace(updatedSelectedPlace)
+    localStorage.setItem(
+      'selectedPlace',
+      JSON.stringify({ cart: updatedSelectedPlace, currentUser: 'ueay' })
+    )
   }
 
   return (
