@@ -11,7 +11,9 @@ function Search() {
 
   useEffect(() => {
     const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || []
-    setSelectedPlace(selectedPlaceData.cart)
+    if (Array.isArray(selectedPlaceData)) {
+      setSelectedPlace(selectedPlaceData.cart)
+    }
   }, [])
 
   // Search Places
@@ -39,8 +41,6 @@ function Search() {
     setLoading(true)
     event.preventDefault()
 
-    // console.log('Next page token= ', nextPageToken)
-
     const params = {
       pagetoken: nextPageToken,
     }
@@ -58,14 +58,20 @@ function Search() {
 
   // Select Place
   // store selectedPlace to localStorage
-
   async function handleSelect(place) {
-    const updatedSelectedPlace = [...selectedPlace, place]
+    // retrieve the existing selectedPlace array from localStorage
+    // if there's none, default empty array and initialize it
+    const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || {
+      cart: [],
+      currentUser: 'ueay',
+    }
+    // append the new place to it
+    const updatedSelectedPlace = [...selectedPlaceData.cart, place]
+    // create a new updatedSelectedPlaceData object that contains the updated selectedPlace array
+    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: 'ueay' }
+
     setSelectedPlace(updatedSelectedPlace)
-    localStorage.setItem(
-      'selectedPlace',
-      JSON.stringify({ cart: updatedSelectedPlace, currentUser: 'ueay' })
-    )
+    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
   }
 
   return (
