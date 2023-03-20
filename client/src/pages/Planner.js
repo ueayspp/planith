@@ -5,6 +5,8 @@ function Planner() {
   const [selectedPlace, setSelectedPlace] = useState([])
   const [durations, setDurations] = useState([])
 
+  const [loading, setLoading] = useState(false)
+
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
   const [duration, setDuration] = useState('')
@@ -16,10 +18,20 @@ function Planner() {
     // get selectedPlaceData from localStorage
     const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace'))
     if (selectedPlaceData) {
-      setSelectedPlace(selectedPlaceData.cart.map((item) => item)) // store all selectedPlace data
+      setSelectedPlace(selectedPlaceData.cart.map((item) => item)) // store selectedPlace all data
       setPlaceNames(selectedPlaceData.cart.map((item) => item.name)) // store selectedPlace name
     }
   }, [])
+
+  // delete place
+  async function handleDelete(place, index) {
+    const deletedPlace = [...selectedPlace]
+    deletedPlace.splice(index, 1)
+    setSelectedPlace(deletedPlace)
+    // update array to localstorage
+    const updatedSelectedPlaceData = { cart: deletedPlace, currentUser: 'ueay' }
+    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
+  }
 
   async function handleCalculate(event) {
     event.preventDefault()
@@ -40,6 +52,8 @@ function Planner() {
 
   // get durations between places from localstorage
   async function getDurations() {
+    setLoading(true)
+
     const params = {
       placeNames,
     }
@@ -47,6 +61,7 @@ function Planner() {
     try {
       const response = await axios.get('/api/places/duration', { params })
       setDurations(response.data)
+      setLoading(false)
     } catch (error) {
       console.log(error)
     }
@@ -55,13 +70,17 @@ function Planner() {
   return (
     <div>
       <h1>แพลนเนอร์</h1>
-      {selectedPlace.map((item, index) => (
+      <h2>ตะกร้า</h2>
+      {selectedPlace.map((place, index) => (
         <div key={index}>
-          <p>{item.name}</p>
+          <p>
+            {place.name} &nbsp;
+            <button onClick={() => handleDelete(place, index)}>ลบ</button>
+          </p>
         </div>
       ))}
 
-      <h2>คำนวณระยะเวลา</h2>
+      {/* <h2>คำนวณระยะเวลา</h2>
       <form onSubmit={handleCalculate}>
         <input
           type="text"
@@ -76,23 +95,27 @@ function Planner() {
           onChange={(event) => setDestination(event.target.value)}
         />
         <button type="submit">คำนวณ</button>
-      </form>
+      </form> */}
 
-      {distance && (
+      {/* {distance && (
         <p>
           {duration} &nbsp; {distance} กิโลเมตร
         </p>
-      )}
+      )} */}
 
-      <h2>คำนวณระยะเวลา</h2>
       <button onClick={getDurations}>get durations</button>
-      {durations.map((duration, index) => (
-        <div key={index}>
-          <p>
-            From {duration.origin} to {duration.destination}: {duration.durationInMins}
-          </p>
-        </div>
-      ))}
+      {loading ? (
+        <p>กำลังโหลด...</p>
+      ) : (
+        <>
+          {durations.map((duration, index) => (
+            <div key={index}>
+              <p>{duration.durationInMins}</p>
+            </div>
+          ))}
+          {/* <p>{durations[durations.length - 1].destination}</p> */}
+        </>
+      )}
     </div>
   )
 }
