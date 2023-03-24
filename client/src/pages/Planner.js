@@ -7,19 +7,11 @@ function Planner() {
 
   const [loading, setLoading] = useState(false)
 
-  const [origin, setOrigin] = useState('')
-  const [destination, setDestination] = useState('')
-  const [duration, setDuration] = useState('')
-  const [distance, setDistance] = useState('')
-
-  const [placeNames, setPlaceNames] = useState([])
-
   useEffect(() => {
     // get selectedPlaceData from localStorage
     const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace'))
     if (selectedPlaceData) {
       setSelectedPlace(selectedPlaceData.cart.map((item) => item)) // store selectedPlace all data
-      setPlaceNames(selectedPlaceData.cart.map((item) => item.name)) // store selectedPlace name
     }
   }, [])
 
@@ -33,26 +25,12 @@ function Planner() {
     localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
   }
 
-  async function handleCalculate(event) {
-    event.preventDefault()
-
-    const params = {
-      origin: origin,
-      destination: destination,
-    }
-
-    try {
-      const response = await axios.get('/api/places/time', { params })
-      setDuration(response.data.durationInMins)
-      setDistance(response.data.distanceInKiloMeters)
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
   // get durations between places from localstorage
-  async function getDurations() {
+  async function getDurations(event) {
+    event.preventDefault()
     setLoading(true)
+
+    const placeNames = selectedPlace.map((place) => place.name)
 
     const params = {
       placeNames,
@@ -71,49 +49,36 @@ function Planner() {
     <div>
       <h1>แพลนเนอร์</h1>
       <h2>ตะกร้า</h2>
-      {selectedPlace.map((place, index) => (
+      {/* {selectedPlace.map((place, index) => (
         <div key={index}>
           <p>
             {place.name} &nbsp;
             <button onClick={() => handleDelete(place, index)}>ลบ</button>
           </p>
         </div>
-      ))}
-
-      {/* <h2>คำนวณระยะเวลา</h2>
-      <form onSubmit={handleCalculate}>
-        <input
-          type="text"
-          value={origin}
-          placeholder="origin"
-          onChange={(event) => setOrigin(event.target.value)}
-        />
-        <input
-          type="text"
-          value={destination}
-          placeholder="destination"
-          onChange={(event) => setDestination(event.target.value)}
-        />
-        <button type="submit">คำนวณ</button>
-      </form> */}
-
-      {/* {distance && (
-        <p>
-          {duration} &nbsp; {distance} กิโลเมตร
-        </p>
-      )} */}
+      ))} */}
 
       <button onClick={getDurations}>get durations</button>
       {loading ? (
         <p>กำลังโหลด...</p>
       ) : (
         <>
-          {durations.map((duration, index) => (
+          {selectedPlace.map((place, index) => (
             <div key={index}>
-              <p>{duration.durationInMins}</p>
+              <p>
+                {place.name}
+                <button onClick={() => handleDelete(place, index)}>ลบ</button>
+              </p>
             </div>
           ))}
-          {/* <p>{durations[durations.length - 1].destination}</p> */}
+          {durations.map((duration, index) => (
+            <div key={index}>
+              <p>
+                {duration.durationInMins} &nbsp;
+                {duration.distanceInKiloMeters} กิโลเมตร
+              </p>
+            </div>
+          ))}
         </>
       )}
     </div>

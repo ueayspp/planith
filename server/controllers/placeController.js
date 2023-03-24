@@ -35,37 +35,6 @@ const searchPlace = async (req, res) => {
     })
 }
 
-// Calculate Time
-// default driving mode
-const getDuration = async (req, res) => {
-  const origin = req.query.origin
-  const destination = req.query.destination
-
-  const params = {
-    key: API_KEY,
-    origin: origin,
-    destination: destination,
-    language: 'th',
-  }
-
-  axios
-    .get(DIRECTIONS_URL, { params })
-    .then(function (response) {
-      console.log(response.data)
-
-      const route = response.data.routes[0]
-      const leg = route.legs[0]
-      const durationInMins = leg.duration.text
-      const distanceInKiloMeters = (leg.distance.value / 1000).toFixed(1)
-      console.log('duration', durationInMins)
-      console.log('distance', distanceInKiloMeters)
-      res.send({ durationInMins, distanceInKiloMeters })
-    })
-    .catch(function (error) {
-      console.log(error)
-    })
-}
-
 const getDurations = async (req, res) => {
   const durations = []
 
@@ -91,7 +60,8 @@ const getDurations = async (req, res) => {
     const route = response.data.routes[0]
     const leg = route.legs[0]
     const durationInMins = leg.duration.text
-    durations.push({ origin, destination, durationInMins })
+    const distanceInKiloMeters = (leg.distance.value / 1000).toFixed(1)
+    durations.push({ durationInMins, distanceInKiloMeters })
   }
 
   console.log(durations)
@@ -100,6 +70,5 @@ const getDurations = async (req, res) => {
 
 module.exports = {
   searchPlace,
-  getDuration,
   getDurations,
 }

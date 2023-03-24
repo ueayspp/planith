@@ -2,18 +2,25 @@ import axios from 'axios'
 import { useState, useEffect } from 'react'
 
 function Search() {
+  // search place
   const [query, setQuery] = useState('')
   const [places, setPlaces] = useState([])
   const [nextPageToken, setNextPageToken] = useState(null)
+
+  // loading state
   const [loading, setLoading] = useState(false)
 
+  // selected place
   const [selectedPlace, setSelectedPlace] = useState([])
+  const [numSelectedPlaces, setNumSelectedPlaces] = useState()
 
   useEffect(() => {
     const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || []
     if (Array.isArray(selectedPlaceData)) {
       setSelectedPlace(selectedPlaceData.cart)
     }
+
+    setNumSelectedPlaces(selectedPlaceData.cart.length)
   }, [])
 
   // Search Places
@@ -58,7 +65,7 @@ function Search() {
 
   // Select Place
   // store selectedPlace to localStorage
-  async function handleSelect(place) {
+  function handleSelect(place) {
     // retrieve the existing selectedPlace array from localStorage
     // if there's none, default empty array and initialize it
     const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || {
@@ -88,6 +95,7 @@ function Search() {
         />
         <button type="submit">ค้นหา</button>
       </form>
+      <p>{numSelectedPlaces}</p>
 
       {loading ? (
         <p>กำลังโหลด...</p>
@@ -102,7 +110,6 @@ function Search() {
           ))}
         </>
       )}
-
       {nextPageToken && <button onClick={handleNextPage}>โหลดเพิ่ม</button>}
     </div>
   )
