@@ -1,7 +1,18 @@
 import axios from 'axios'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import { UserContext } from '../contexts/UserContext'
+
+import { Badge, Button, Checkbox, Modal, TextInput } from 'flowbite-react'
 
 function Search() {
+  const navigate = useNavigate()
+
+  const [showModal, setShowModal] = useState(false)
+
+  const { userData } = useContext(UserContext)
+
   // search place
   const [query, setQuery] = useState('')
   const [places, setPlaces] = useState([])
@@ -14,13 +25,15 @@ function Search() {
   const [selectedPlace, setSelectedPlace] = useState([])
   const [numSelectedPlaces, setNumSelectedPlaces] = useState()
 
+  // checkbox
+  const [checkboxItems, setCheckboxItems] = useState([])
+
   useEffect(() => {
     const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || []
-    if (Array.isArray(selectedPlaceData)) {
+    if (Array.isArray(selectedPlaceData.cart)) {
       setSelectedPlace(selectedPlaceData.cart)
+      setNumSelectedPlaces(selectedPlaceData.cart.length)
     }
-
-    setNumSelectedPlaces(selectedPlaceData.cart.length)
   }, [])
 
   // Search Places
@@ -66,36 +79,89 @@ function Search() {
   // Select Place
   // store selectedPlace to localStorage
   function handleSelect(place) {
-    // retrieve the existing selectedPlace array from localStorage
-    // if there's none, default empty array and initialize it
     const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || {
       cart: [],
-      currentUser: 'ueay',
+      currentUser: '',
     }
-    // append the new place to it
     const updatedSelectedPlace = [...selectedPlaceData.cart, place]
-    // create a new updatedSelectedPlaceData object that contains the updated selectedPlace array
-    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: 'ueay' }
+    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
 
     setSelectedPlace(updatedSelectedPlace)
+    setNumSelectedPlaces(updatedSelectedPlace.length)
     localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
   }
 
+  // Select place to delete using checkbox
+  function handleCheckboxChange(index) {
+    const isChecked = checkboxItems.includes(index)
+    const newCheckboxItems = isChecked
+      ? checkboxItems.filter((item) => item !== index)
+      : [...checkboxItems, index]
+
+    setCheckboxItems(newCheckboxItems)
+  }
+
+  // Delete place
+  function handleDelete(place, index) {
+    const updatedSelectedPlace = selectedPlace.filter((place, index) => {
+      return !checkboxItems.includes(index)
+    })
+
+    const updatedCheckboxItems = checkboxItems.filter((item) => item !== index)
+    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
+
+    setSelectedPlace(updatedSelectedPlace)
+    setNumSelectedPlaces(updatedSelectedPlace.length)
+    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
+
+    setCheckboxItems(updatedCheckboxItems)
+  }
   return (
     <div>
-      <h1>ค้นหาสถานที่</h1>
       <form onSubmit={handleSearch}>
-        <label htmlFor="query">Text Search</label>
+        <label htmlFor="query">ค้นหาสถานที่</label>
         <br />
-        <input
+        <TextInput
           type="text"
           id="query"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          required
         />
-        <button type="submit">ค้นหา</button>
+        <Button type="submit">ค้นหา</Button>
       </form>
-      <p>{numSelectedPlaces}</p>
+
+      <Button onClick={() => setShowModal(true)}>
+        เลือก {numSelectedPlaces > 0 ? <Badge>{numSelectedPlaces}</Badge> : ''}
+      </Button>
+      <Modal dismissible={true} show={showModal} onClose={() => setShowModal(false)}>
+        <Modal.Header>สถานที่ท่องเที่ยวที่เลือก</Modal.Header>
+        <Modal.Body className="space-y-2">
+          {numSelectedPlaces > 0 ? (
+            selectedPlace.map((place, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Checkbox id="index" onChange={() => handleCheckboxChange(index)} />
+                <p>{place.name}</p>
+              </div>
+            ))
+          ) : (
+            <div>คุณยังไม่ได้เลือกสถานที่</div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          {numSelectedPlaces > 0 ? (
+            checkboxItems.length > 0 ? (
+              <Button color="failure" onClick={handleDelete}>
+                ลบ
+              </Button>
+            ) : (
+              <Button onClick={() => navigate('/planner')}>จัดแพลน</Button>
+            )
+          ) : (
+            ''
+          )}
+        </Modal.Footer>
+      </Modal>
 
       {loading ? (
         <p>กำลังโหลด...</p>
@@ -105,7 +171,7 @@ function Search() {
             <div key={place.place_id}>
               <p>{place.name}</p>
               <p>{place.formatted_address}</p>
-              <button onClick={() => handleSelect(place)}>เลือก</button>
+              <Button onClick={() => handleSelect(place)}>เลือก</Button>
             </div>
           ))}
         </>
