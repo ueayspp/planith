@@ -1,15 +1,14 @@
 import { useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-// context
 import { UserContext } from '../contexts/UserContext'
 
-// dayjs
+// datepicker
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
-
-// datepicker
 import Datepicker from 'react-tailwindcss-datepicker'
+
+import { Button, TextInput } from 'flowbite-react'
 
 function Hero() {
   const navigate = useNavigate()
@@ -40,7 +39,7 @@ function Hero() {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <input
+        <TextInput
           type="number"
           min={1}
           placeholder="กรุณาใส่จำนวนผู้เดินทาง"
@@ -53,7 +52,9 @@ function Hero() {
           placeholder={'กรุณาใส่วันเดินทาง'}
           displayFormat={'DD/MM/YYYY'}
         />
-        <button type="submit">เริ่มแพลนกันเลย !</button>
+        <Button color="dark" type="submit">
+          เริ่มแพลนกันเลย !
+        </Button>
       </form>
 
       <div>

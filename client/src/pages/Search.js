@@ -128,11 +128,13 @@ function Search() {
           onChange={(event) => setQuery(event.target.value)}
           required
         />
-        <Button type="submit">ค้นหา</Button>
+        <Button color="dark" type="submit">
+          ค้นหา
+        </Button>
       </form>
 
-      <Button onClick={() => setShowModal(true)}>
-        เลือก {numSelectedPlaces > 0 ? <Badge>{numSelectedPlaces}</Badge> : ''}
+      <Button color="light" onClick={() => setShowModal(true)}>
+        เลือก {numSelectedPlaces > 0 ? <Badge color="dark">{numSelectedPlaces}</Badge> : ''}
       </Button>
       <Modal dismissible={true} show={showModal} onClose={() => setShowModal(false)}>
         <Modal.Header>สถานที่ท่องเที่ยวที่เลือก</Modal.Header>
@@ -155,7 +157,9 @@ function Search() {
                 ลบ
               </Button>
             ) : (
-              <Button onClick={() => navigate('/planner')}>จัดแพลน</Button>
+              <Button color="dark" onClick={() => navigate('/planner')}>
+                จัดแพลน
+              </Button>
             )
           ) : (
             ''
@@ -171,7 +175,9 @@ function Search() {
             <div key={place.place_id}>
               <p>{place.name}</p>
               <p>{place.formatted_address}</p>
-              <Button onClick={() => handleSelect(place)}>เลือก</Button>
+              <Button color="dark" onClick={() => handleSelect(place)}>
+                เลือก
+              </Button>
             </div>
           ))}
         </>
