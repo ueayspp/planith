@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useEffect, useState, useContext } from 'react'
+import { Link } from 'react-router-dom'
 
 import { UserContext } from '../contexts/UserContext'
 
@@ -35,7 +36,7 @@ function Planner() {
     deletedPlace.splice(index, 1)
     setSelectedPlace(deletedPlace)
     // update array to localstorage
-    const updatedSelectedPlaceData = { cart: deletedPlace, currentUser: 'ueay' }
+    const updatedSelectedPlaceData = { cart: deletedPlace, currentUser: '' }
     localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
   }
 
@@ -84,7 +85,9 @@ function Planner() {
                   <Timeline.Time>
                     <input placeholder="กรุณาระบุเวลา" />
                   </Timeline.Time>
-                  <Timeline.Title>{place.name}</Timeline.Title>
+                  <Timeline.Title>
+                    <Link to={`/places/${place.place_id}`}>{place.name}</Link>
+                  </Timeline.Title>
                   <Timeline.Body>{place.formatted_address}</Timeline.Body>
                   <Button size="xs" color="dark" onClick={() => handleDelete(place, index)}>
                     ลบ

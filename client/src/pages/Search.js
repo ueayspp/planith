@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { useState, useEffect, useContext } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { UserContext } from '../contexts/UserContext'
 
-import { Badge, Button, Checkbox, Modal, TextInput } from 'flowbite-react'
+import { Badge, Button, Card, Checkbox, Modal, Rating, TextInput } from 'flowbite-react'
 
 function Search() {
   const navigate = useNavigate()
@@ -108,6 +108,7 @@ function Search() {
     })
 
     const updatedCheckboxItems = checkboxItems.filter((item) => item !== index)
+
     const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
 
     setSelectedPlace(updatedSelectedPlace)
@@ -116,6 +117,7 @@ function Search() {
 
     setCheckboxItems(updatedCheckboxItems)
   }
+
   return (
     <div>
       <form onSubmit={handleSearch}>
@@ -170,19 +172,37 @@ function Search() {
       {loading ? (
         <p>กำลังโหลด...</p>
       ) : (
-        <>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {places.map((place) => (
-            <div key={place.place_id}>
-              <p>{place.name}</p>
+            <Card className="flex" key={place.place_id}>
+              {place.photos && place.photos.length > 0 && (
+                <img
+                  src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${place.photos[0].photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
+                  alt={place.name}
+                  className="h-48 md:h-60 w-auto object-cover"
+                />
+              )}
+              <Link to={`/places/${place.place_id}`}>{place.name}</Link>
+              <Rating>
+                <Rating.Star />
+                <p>{place.rating}</p>
+                <span className="mx-1.5 h-1 w-1 rounded-full bg-gray-500 dark:bg-gray-400" />
+                <p>{place.user_ratings_total} รีวิว</p>
+              </Rating>
               <p>{place.formatted_address}</p>
+              {/* add conditon that if it already select or not */}
               <Button color="dark" onClick={() => handleSelect(place)}>
                 เลือก
               </Button>
-            </div>
+            </Card>
           ))}
-        </>
+        </div>
       )}
-      {nextPageToken && <button onClick={handleNextPage}>โหลดเพิ่ม</button>}
+      {nextPageToken && (
+        <Button color="light" onClick={handleNextPage}>
+          โหลดเพิ่ม
+        </Button>
+      )}
     </div>
   )
 }

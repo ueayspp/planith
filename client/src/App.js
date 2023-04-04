@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Search from './pages/Search'
+import PlaceDetail from './pages/PlaceDetail'
 import Planner from './pages/Planner'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/places/:place_id" element={<PlaceDetail />} />
             <Route path="/planner" element={<Planner />} />
           </Routes>
         </div>
