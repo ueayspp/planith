@@ -83,9 +83,33 @@ function Search() {
       cart: [],
       currentUser: '',
     }
+
+    // Add the selected place to the cart
     const updatedSelectedPlace = [...selectedPlaceData.cart, place]
+
+    // Update the selected place data
     const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
 
+    // Update state and localStorage
+    setSelectedPlace(updatedSelectedPlace)
+    setNumSelectedPlaces(updatedSelectedPlace.length)
+    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
+  }
+
+  // Unselect Place
+  function handleUnselect(place) {
+    const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || {
+      cart: [],
+      currentUser: '',
+    }
+
+    // Remove the selected place from the cart
+    const updatedSelectedPlace = selectedPlaceData.cart.filter((p) => p.place_id !== place.place_id)
+
+    // Update the selected place data
+    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
+
+    // Update state and localStorage
     setSelectedPlace(updatedSelectedPlace)
     setNumSelectedPlaces(updatedSelectedPlace.length)
     localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
@@ -190,10 +214,16 @@ function Search() {
                 <p>{place.user_ratings_total} รีวิว</p>
               </Rating>
               <p>{place.formatted_address}</p>
-              {/* add conditon that if it already select or not */}
-              <Button color="dark" onClick={() => handleSelect(place)}>
-                เลือก
-              </Button>
+
+              {selectedPlace.find((p) => p.place_id === place.place_id) ? (
+                <Button color="light" onClick={() => handleUnselect(place)}>
+                  เลือกแล้ว
+                </Button>
+              ) : (
+                <Button color="dark" onClick={() => handleSelect(place)}>
+                  เลือก
+                </Button>
+              )}
             </Card>
           ))}
         </div>
