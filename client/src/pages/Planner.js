@@ -25,10 +25,12 @@ function Planner() {
     }
   }, [])
 
-  // useEffect(() => {
-  //   // call getDurations() only after the selectedPlace state is updated
-  //   getDurations()
-  // }, [selectedPlace])
+  // fetch durations whenever selectedPlace changes
+  useEffect(() => {
+    if (selectedPlace.length > 0) {
+      getDurations()
+    }
+  }, [selectedPlace])
 
   // delete place
   async function handleDelete(place, index) {
@@ -72,7 +74,6 @@ function Planner() {
         </p>
         <p>{userData.diff} วัน</p>
       </div>
-      <button onClick={getDurations}>คำนวณระยะเวลาและระยะทาง</button>
       {loading ? (
         <Spinner />
       ) : (

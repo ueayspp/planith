@@ -8,10 +8,10 @@ const router = express.Router()
 // Search places
 router.get('/', searchPlace)
 
-// GET a place
-router.get('/:place_id', getPlace)
-
 // GET each duration
 router.get('/duration', getDurations)
+
+// GET a place
+router.get('/:place_id', getPlace)
 
 module.exports = router

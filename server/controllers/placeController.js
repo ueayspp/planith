@@ -63,7 +63,6 @@ const getDurations = async (req, res) => {
   const durations = []
 
   const placeNames = req.query.placeNames
-  // console.log('server place names', placeNames)
 
   const origins = placeNames.slice(0, -1) // remove last index
   const destinations = placeNames.slice(1) // remove first index

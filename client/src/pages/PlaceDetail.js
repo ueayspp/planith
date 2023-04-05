@@ -20,7 +20,6 @@ function PlaceDetail({ places }) {
     try {
       const response = await axios.get('/api/places/:place_id', { params })
       setPlaceDetail(response.data)
-      console.log(response.data)
     } catch (error) {
       console.log(error)
     }
