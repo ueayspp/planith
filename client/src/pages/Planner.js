@@ -46,10 +46,10 @@ function Planner() {
   async function getDurations() {
     setLoading(true)
 
-    const placeNames = selectedPlace.map((place) => place.name)
+    const placeIds = selectedPlace.map((place) => place.place_id)
 
     const params = {
-      placeNames,
+      placeIds,
     }
 
     try {

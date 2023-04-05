@@ -62,10 +62,10 @@ const getPlace = async (req, res) => {
 const getDurations = async (req, res) => {
   const durations = []
 
-  const placeNames = req.query.placeNames
+  const placeIds = req.query.placeIds
 
-  const origins = placeNames.slice(0, -1) // remove last index
-  const destinations = placeNames.slice(1) // remove first index
+  const origins = placeIds.slice(0, -1) // remove last index
+  const destinations = placeIds.slice(1) // remove first index
 
   for (let i = 0; i < origins.length; i++) {
     const origin = origins[i]
@@ -73,8 +73,8 @@ const getDurations = async (req, res) => {
 
     const response = await axios.get(DIRECTIONS_URL, {
       params: {
-        origin,
-        destination,
+        origin: `place_id:${origin}`,
+        destination: `place_id:${destination}`,
         language: 'th',
         key: API_KEY,
       },
