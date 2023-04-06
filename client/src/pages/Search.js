@@ -115,7 +115,7 @@ function Search() {
     localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
   }
 
-  // Select place to delete using checkbox
+  // Select the place to delete using checkbox
   function handleCheckboxChange(index) {
     const isChecked = checkboxItems.includes(index)
     const newCheckboxItems = isChecked
@@ -125,13 +125,15 @@ function Search() {
     setCheckboxItems(newCheckboxItems)
   }
 
-  // Delete place
-  function handleDelete(place, index) {
+  // Delete the place from checkbox
+  function handleCheckboxDelete(place, index) {
     const updatedSelectedPlace = selectedPlace.filter((place, index) => {
       return !checkboxItems.includes(index)
     })
 
-    const updatedCheckboxItems = checkboxItems.filter((item) => item !== index)
+    const updatedCheckboxItems = checkboxItems.filter(
+      (item) => item !== index && item < updatedSelectedPlace.length
+    )
 
     const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
 
@@ -179,7 +181,7 @@ function Search() {
         <Modal.Footer>
           {numSelectedPlaces > 0 ? (
             checkboxItems.length > 0 ? (
-              <Button color="failure" onClick={handleDelete}>
+              <Button color="failure" onClick={handleCheckboxDelete}>
                 ลบ
               </Button>
             ) : (
