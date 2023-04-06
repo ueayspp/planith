@@ -29,18 +29,19 @@ function PlaceDetail({ places }) {
     <div>
       {placeDetail && (
         <div>
-          <h1>{placeDetail.result.name}</h1>
-          {placeDetail.result.photos.map((photo, index) => (
+          <h1>{placeDetail.name}</h1>
+          {placeDetail.photos.map((photo, index) => (
             <img
               key={index}
               src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${photo.photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
-              alt={placeDetail.result.name}
+              alt={placeDetail.name}
               className="h-48 md:h-60 w-auto"
             />
           ))}
-          <p>{placeDetail.result.formatted_address}</p>
-          <p>{placeDetail.result.current_opening_hours.weekday_text}</p>
-          <p>{placeDetail.result.rating}</p>
+          <p>{placeDetail.formatted_address}</p>
+          {/* <p>{placeDetail.editorial_summary.overview}</p> */}
+          {/* <p>{placeDetail.current_opening_hours.weekday_text}</p> */}
+          <p>{placeDetail.rating}</p>
         </div>
       )}
     </div>

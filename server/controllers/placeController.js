@@ -50,8 +50,8 @@ const getPlace = async (req, res) => {
   axios
     .get(PLACE_DETAILS_URL, { params })
     .then(function (response) {
-      const results = response.data
-      res.send(results)
+      const result = response.data.result
+      res.send(result)
     })
     .catch(function (error) {
       console.log(error)
