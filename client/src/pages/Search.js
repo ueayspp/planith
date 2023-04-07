@@ -4,14 +4,17 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { UserContext } from '../contexts/UserContext'
 
+// flowbite components
 import { Badge, Button, Card, Checkbox, Modal, Rating, TextInput } from 'flowbite-react'
+
+// components
+import AlertMessage from '../components/AlertMessage'
 
 function Search() {
   const navigate = useNavigate()
 
   const [showModal, setShowModal] = useState(false)
-
-  const { userData } = useContext(UserContext)
+  const [showAlert, setShowAlert] = useState(false)
 
   // search place
   const [query, setQuery] = useState('')
@@ -38,21 +41,29 @@ function Search() {
 
   // Search Places
   async function handleSearch(event) {
-    setLoading(true)
-    event.preventDefault()
+    if (query !== '') {
+      setLoading(true)
+      event.preventDefault()
 
-    const params = {
-      input: query,
-    }
+      const params = {
+        input: query,
+      }
 
-    try {
-      const response = await axios.get('/api/places/', { params })
-      setPlaces(response.data.results)
-      setNextPageToken(response.data.nextPageToken)
-      setLoading(false)
-    } catch (error) {
-      console.log(error)
-      setLoading(false)
+      try {
+        const response = await axios.get('/api/places/', { params })
+        setPlaces(response.data.results)
+        setNextPageToken(response.data.nextPageToken)
+        setLoading(false)
+      } catch (error) {
+        console.log(error)
+        setLoading(false)
+      }
+    } else {
+      event.preventDefault()
+      setShowAlert(true)
+      setTimeout(() => {
+        setShowAlert(false)
+      }, 1000)
     }
   }
 
@@ -146,6 +157,8 @@ function Search() {
 
   return (
     <div>
+      {showAlert && <AlertMessage message="กรุณากรอกสถานที่" color="failure" />}
+
       <form onSubmit={handleSearch}>
         <label htmlFor="query">ค้นหาสถานที่</label>
         <br />
@@ -154,7 +167,7 @@ function Search() {
           id="query"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          required
+          placeholder="เช่น กรุงเทพ"
         />
         <Button color="dark" type="submit">
           ค้นหา
