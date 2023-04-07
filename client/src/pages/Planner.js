@@ -4,9 +4,11 @@ import { Link } from 'react-router-dom'
 
 import { UserContext } from '../contexts/UserContext'
 
-// components
 import { Button, Spinner, Timeline } from 'flowbite-react'
+
+// components
 import BlankPlanner from '../components/BlankPlanner'
+import ToastMessage from '../components/ToastMessage'
 
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
@@ -17,6 +19,8 @@ function Planner() {
   const [durations, setDurations] = useState([])
 
   const [loading, setLoading] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [method, setMethod] = useState()
 
   useEffect(() => {
     // Get tripPlanData from localStorage
@@ -45,6 +49,12 @@ function Planner() {
     tripPlanData.cart = deletedPlace
     localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
     setSelectedPlace(deletedPlace)
+
+    setMethod('DEL')
+    setShowToast(true)
+    setTimeout(() => {
+      setShowToast(false)
+    }, 1000)
   }
 
   // Get durations between places from localstorage
@@ -68,6 +78,8 @@ function Planner() {
 
   return (
     <div>
+      {showToast && <ToastMessage method={method} />}
+
       <h1>แพลนเนอร์</h1>
       {tripPlan.guest && tripPlan.startDate && tripPlan.endDate ? (
         <div>

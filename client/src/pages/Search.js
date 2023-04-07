@@ -4,17 +4,19 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { UserContext } from '../contexts/UserContext'
 
-// flowbite components
 import { Badge, Button, Card, Checkbox, Modal, Rating, TextInput } from 'flowbite-react'
 
 // components
 import AlertMessage from '../components/AlertMessage'
+import ToastMessage from '../components/ToastMessage'
 
 function Search() {
   const navigate = useNavigate()
 
   const [showModal, setShowModal] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+  const [method, setMethod] = useState()
 
   // search place
   const [query, setQuery] = useState('')
@@ -105,6 +107,12 @@ function Search() {
     setSelectedPlace(updatedSelectedPlace)
     setNumSelectedPlaces(updatedSelectedPlace.length)
     localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+
+    setMethod('ADD')
+    setShowToast(true)
+    setTimeout(() => {
+      setShowToast(false)
+    }, 1000)
   }
 
   // Unselect Place
@@ -121,6 +129,12 @@ function Search() {
     setSelectedPlace(updatedSelectedPlace)
     setNumSelectedPlaces(updatedSelectedPlace.length)
     localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+
+    setMethod('DEL')
+    setShowToast(true)
+    setTimeout(() => {
+      setShowToast(false)
+    }, 1000)
   }
 
   // Select place to delete using checkbox
@@ -158,6 +172,7 @@ function Search() {
   return (
     <div>
       {showAlert && <AlertMessage message="กรุณากรอกสถานที่" color="failure" />}
+      {showToast && <ToastMessage method={method} />}
 
       <form onSubmit={handleSearch}>
         <label htmlFor="query">ค้นหาสถานที่</label>
