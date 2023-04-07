@@ -27,12 +27,20 @@ function Hero() {
   }
 
   function handleSubmit(event) {
-    event.preventDefault()
-    // save to context
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
+    // event.preventDefault()
     const start = new Date(value.startDate)
     const end = new Date(value.endDate)
     const diff = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1
-    setUserData({ guest, start, end, diff })
+
+    // Add new properties to tripPlanData object
+    tripPlanData.guest = guest
+    tripPlanData.startDate = value.startDate
+    tripPlanData.endDate = value.endDate
+    console.log(tripPlanData)
+
+    // Save updated tripPlanData value to localStorage
+    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
     navigate('/search')
   }
 

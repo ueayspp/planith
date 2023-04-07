@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 
 import { UserContext } from '../contexts/UserContext'
 
+// components
 import { Button, Spinner, Timeline } from 'flowbite-react'
 
 import dayjs from 'dayjs'
@@ -18,31 +19,34 @@ function Planner() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // get selectedPlaceData from localStorage
-    const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace'))
-    if (selectedPlaceData) {
-      setSelectedPlace(selectedPlaceData.cart.map((item) => item)) // store selectedPlace all data
+    // Get trioPlanData from localStorage
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan'))
+    if (tripPlanData) {
+      setSelectedPlace(tripPlanData.cart.map((item) => item)) // store selectedPlace all data
     }
   }, [])
 
-  // fetch durations whenever selectedPlace changes
+  // Call getDurations whenever selectedPlace changes
   useEffect(() => {
     if (selectedPlace.length > 0) {
       getDurations()
     }
   }, [selectedPlace])
 
-  // delete place
+  // Delete place
   async function handleDelete(place, index) {
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
+
     const deletedPlace = [...selectedPlace]
     deletedPlace.splice(index, 1)
+
+    // Update state and localStorage
+    tripPlanData.cart = deletedPlace
+    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
     setSelectedPlace(deletedPlace)
-    // update array to localstorage
-    const updatedSelectedPlaceData = { cart: deletedPlace, currentUser: '' }
-    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
   }
 
-  // get durations between places from localstorage
+  // Get durations between places from localstorage
   async function getDurations() {
     setLoading(true)
 
@@ -74,35 +78,42 @@ function Planner() {
         </p>
         <p>{userData.diff} วัน</p>
       </div>
-      {loading ? (
-        <Spinner />
+
+      {selectedPlace.length > 0 ? (
+        <>
+          {loading ? (
+            <Spinner />
+          ) : (
+            <Timeline className="m-8">
+              <Timeline.Item>
+                <Timeline.Content className="space-y-12">
+                  {selectedPlace.map((place, index) => (
+                    <div key={index}>
+                      <Timeline.Point />
+                      <Timeline.Time>
+                        <input placeholder="กรุณาระบุเวลา" />
+                      </Timeline.Time>
+                      <Timeline.Title>
+                        <Link to={`/places/${place.place_id}`}>{place.name}</Link>
+                      </Timeline.Title>
+                      <Timeline.Body>{place.formatted_address}</Timeline.Body>
+                      <Button size="xs" color="dark" onClick={() => handleDelete(place, index)}>
+                        ลบ
+                      </Button>
+                      <p className="my-8">
+                        {durations.length > index && durations[index].durationInMins
+                          ? `${durations[index].durationInMins} --- ${durations[index].distanceInKiloMeters} กิโลเมตร`
+                          : ''}
+                      </p>
+                    </div>
+                  ))}
+                </Timeline.Content>
+              </Timeline.Item>
+            </Timeline>
+          )}
+        </>
       ) : (
-        <Timeline className="m-8">
-          <Timeline.Item>
-            <Timeline.Content className="space-y-12">
-              {selectedPlace.map((place, index) => (
-                <div key={index}>
-                  <Timeline.Point />
-                  <Timeline.Time>
-                    <input placeholder="กรุณาระบุเวลา" />
-                  </Timeline.Time>
-                  <Timeline.Title>
-                    <Link to={`/places/${place.place_id}`}>{place.name}</Link>
-                  </Timeline.Title>
-                  <Timeline.Body>{place.formatted_address}</Timeline.Body>
-                  <Button size="xs" color="dark" onClick={() => handleDelete(place, index)}>
-                    ลบ
-                  </Button>
-                  <p className="my-8">
-                    {durations.length > index && durations[index].durationInMins
-                      ? `${durations[index].durationInMins} --- ${durations[index].distanceInKiloMeters} กิโลเมตร`
-                      : ''}
-                  </p>
-                </div>
-              ))}
-            </Timeline.Content>
-          </Timeline.Item>
-        </Timeline>
+        <></>
       )}
     </div>
   )

@@ -29,10 +29,10 @@ function Search() {
   const [checkboxItems, setCheckboxItems] = useState([])
 
   useEffect(() => {
-    const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || []
-    if (Array.isArray(selectedPlaceData.cart)) {
-      setSelectedPlace(selectedPlaceData.cart)
-      setNumSelectedPlaces(selectedPlaceData.cart.length)
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || []
+    if (Array.isArray(tripPlanData.cart)) {
+      setSelectedPlace(tripPlanData.cart)
+      setNumSelectedPlaces(tripPlanData.cart.length)
     }
   }, [])
 
@@ -77,45 +77,42 @@ function Search() {
   }
 
   // Select Place
-  // store selectedPlace to localStorage
+  // Store selectedPlace to localStorage
   function handleSelect(place) {
-    const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || {
-      cart: [],
-      currentUser: '',
-    }
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
+
+    // Initialize tripPlanData.cart to an empty array if it is not defined
+    tripPlanData.cart = tripPlanData.cart || []
 
     // Add the selected place to the cart
-    const updatedSelectedPlace = [...selectedPlaceData.cart, place]
+    const updatedSelectedPlace = [...tripPlanData.cart, place]
 
     // Update the selected place data
-    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
+    tripPlanData.cart = updatedSelectedPlace
 
     // Update state and localStorage
     setSelectedPlace(updatedSelectedPlace)
     setNumSelectedPlaces(updatedSelectedPlace.length)
-    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
+    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
   }
 
   // Unselect Place
   function handleUnselect(place) {
-    const selectedPlaceData = JSON.parse(localStorage.getItem('selectedPlace')) || {
-      cart: [],
-      currentUser: '',
-    }
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
 
     // Remove the selected place from the cart
-    const updatedSelectedPlace = selectedPlaceData.cart.filter((p) => p.place_id !== place.place_id)
+    const updatedSelectedPlace = tripPlanData.cart.filter((p) => p.place_id !== place.place_id)
 
     // Update the selected place data
-    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
+    tripPlanData.cart = updatedSelectedPlace
 
     // Update state and localStorage
     setSelectedPlace(updatedSelectedPlace)
     setNumSelectedPlaces(updatedSelectedPlace.length)
-    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
+    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
   }
 
-  // Select the place to delete using checkbox
+  // Select place to delete using checkbox
   function handleCheckboxChange(index) {
     const isChecked = checkboxItems.includes(index)
     const newCheckboxItems = isChecked
@@ -127,6 +124,8 @@ function Search() {
 
   // Delete the place from checkbox
   function handleCheckboxDelete(place, index) {
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
+
     const updatedSelectedPlace = selectedPlace.filter((place, index) => {
       return !checkboxItems.includes(index)
     })
@@ -135,13 +134,14 @@ function Search() {
       (item) => item !== index && item < updatedSelectedPlace.length
     )
 
-    const updatedSelectedPlaceData = { cart: updatedSelectedPlace, currentUser: '' }
+    // Update the selected place data
+    tripPlanData.cart = updatedSelectedPlace
 
+    // Update state and localStorage
+    setCheckboxItems(updatedCheckboxItems)
     setSelectedPlace(updatedSelectedPlace)
     setNumSelectedPlaces(updatedSelectedPlace.length)
-    localStorage.setItem('selectedPlace', JSON.stringify(updatedSelectedPlaceData))
-
-    setCheckboxItems(updatedCheckboxItems)
+    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
   }
 
   return (
