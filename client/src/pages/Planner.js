@@ -6,32 +6,33 @@ import { UserContext } from '../contexts/UserContext'
 
 // components
 import { Button, Spinner, Timeline } from 'flowbite-react'
+import BlankPlanner from '../components/BlankPlanner'
 
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 
 function Planner() {
+  const [tripPlan, setTripPlan] = useState([])
   const [selectedPlace, setSelectedPlace] = useState([])
   const [durations, setDurations] = useState([])
-
-  const { userData } = useContext(UserContext)
 
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Get trioPlanData from localStorage
+    // Get tripPlanData from localStorage
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan'))
     if (tripPlanData) {
+      setTripPlan(tripPlanData)
       setSelectedPlace(tripPlanData.cart.map((item) => item)) // store selectedPlace all data
     }
   }, [])
 
   // Call getDurations whenever selectedPlace changes
-  useEffect(() => {
-    if (selectedPlace.length > 0) {
-      getDurations()
-    }
-  }, [selectedPlace])
+  // useEffect(() => {
+  //   if (selectedPlace.length > 0) {
+  //     getDurations()
+  //   }
+  // }, [selectedPlace])
 
   // Delete place
   async function handleDelete(place, index) {
@@ -68,19 +69,23 @@ function Planner() {
   return (
     <div>
       <h1>แพลนเนอร์</h1>
-      <div>
-        <p>{userData.guest} คน</p>
-        <p>
-          {userData.start &&
-            dayjs(userData.start).locale('th').add(543, 'year').format('D MMMM YYYY')}
-          &nbsp;-&nbsp;
-          {userData.end && dayjs(userData.end).locale('th').add(543, 'year').format('D MMMM YYYY')}
-        </p>
-        <p>{userData.diff} วัน</p>
-      </div>
+      {tripPlan.guest && tripPlan.startDate && tripPlan.endDate ? (
+        <div>
+          <p>{tripPlan.guest} คน</p>
+          <p>
+            {tripPlan.startDate &&
+              dayjs(tripPlan.startDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
+            &nbsp;-&nbsp;
+            {tripPlan.endDate &&
+              dayjs(tripPlan.endDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
+          </p>
+        </div>
+      ) : (
+        ''
+      )}
 
       {selectedPlace.length > 0 ? (
-        <>
+        <div>
           {loading ? (
             <Spinner />
           ) : (
@@ -111,9 +116,11 @@ function Planner() {
               </Timeline.Item>
             </Timeline>
           )}
-        </>
+        </div>
       ) : (
-        <></>
+        <div>
+          <BlankPlanner />
+        </div>
       )}
     </div>
   )

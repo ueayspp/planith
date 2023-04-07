@@ -8,12 +8,16 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 import Datepicker from 'react-tailwindcss-datepicker'
 
+// flowbite components
 import { Button, TextInput } from 'flowbite-react'
+
+// components
+import AlertMessage from './AlertMessage'
 
 function Hero() {
   const navigate = useNavigate()
 
-  const { setUserData } = useContext(UserContext)
+  const [showAlert, setShowAlert] = useState(false)
 
   const [guest, setGuest] = useState('')
   const [value, setValue] = useState({
@@ -28,24 +32,32 @@ function Hero() {
 
   function handleSubmit(event) {
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
-    // event.preventDefault()
-    const start = new Date(value.startDate)
-    const end = new Date(value.endDate)
-    const diff = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1
 
-    // Add new properties to tripPlanData object
-    tripPlanData.guest = guest
-    tripPlanData.startDate = value.startDate
-    tripPlanData.endDate = value.endDate
-    console.log(tripPlanData)
+    // Check value if it's null or not
+    if (guest !== '' && value.startDate !== null && value.endDate !== null) {
+      // Value not null
+      // Add new properties to tripPlanData object
+      tripPlanData.guest = guest
+      tripPlanData.startDate = value.startDate
+      tripPlanData.endDate = value.endDate
+      console.log(tripPlanData)
 
-    // Save updated tripPlanData value to localStorage
-    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
-    navigate('/search')
+      // Save updated tripPlanData value to localStorage
+      localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+      navigate('/search')
+    } else {
+      event.preventDefault()
+      setShowAlert(true)
+      setTimeout(() => {
+        setShowAlert(false)
+      }, 1000)
+    }
   }
 
   return (
     <div>
+      {showAlert && <AlertMessage message="เกิดข้อผิดพลาด !" color="failure" />}
+
       <form onSubmit={handleSubmit}>
         <TextInput
           type="number"
@@ -64,15 +76,6 @@ function Hero() {
           เริ่มแพลนกันเลย !
         </Button>
       </form>
-
-      <div>
-        {guest}
-        {value.startDate &&
-          dayjs(value.startDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
-        &nbsp;
-        {value.startDate &&
-          dayjs(value.endDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
-      </div>
     </div>
   )
 }
