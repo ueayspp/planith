@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 
 import { UserContext } from '../contexts/UserContext'
 
-import { Button, Spinner, Timeline } from 'flowbite-react'
+import { TruckIcon } from '@heroicons/react/24/outline'
+import { Button, Rating, Spinner, Timeline } from 'flowbite-react'
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
 // components
 import BlankPlanner from '../components/BlankPlanner'
@@ -76,6 +78,22 @@ function Planner() {
     }
   }
 
+  function onDragEnd(result) {
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
+
+    if (!result.destination) {
+      return
+    }
+
+    const newItems = Array.from(selectedPlace)
+    const [reorderedItem] = newItems.splice(result.source.index, 1)
+    newItems.splice(result.destination.index, 0, reorderedItem)
+
+    tripPlanData.cart = newItems
+    setSelectedPlace(newItems)
+    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+  }
+
   return (
     <div>
       {showToast && <ToastMessage method={method} />}
@@ -83,14 +101,21 @@ function Planner() {
       <h1>แพลนเนอร์</h1>
       {tripPlan.guest && tripPlan.startDate && tripPlan.endDate ? (
         <div>
+          {tripPlan.startDate === tripPlan.endDate ? (
+            <span>
+              {tripPlan.startDate &&
+                dayjs(tripPlan.startDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
+            </span>
+          ) : (
+            <span>
+              {tripPlan.startDate &&
+                dayjs(tripPlan.startDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
+              &nbsp;-&nbsp;
+              {tripPlan.endDate &&
+                dayjs(tripPlan.endDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
+            </span>
+          )}
           <p>{tripPlan.guest} คน</p>
-          <p>
-            {tripPlan.startDate &&
-              dayjs(tripPlan.startDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
-            &nbsp;-&nbsp;
-            {tripPlan.endDate &&
-              dayjs(tripPlan.endDate).locale('th').add(543, 'year').format('D MMMM YYYY')}
-          </p>
         </div>
       ) : (
         ''
@@ -101,32 +126,82 @@ function Planner() {
           {loading ? (
             <Spinner />
           ) : (
-            <Timeline className="m-8">
-              <Timeline.Item>
-                <Timeline.Content className="space-y-12">
-                  {selectedPlace.map((place, index) => (
-                    <div key={index}>
-                      <Timeline.Point />
-                      <Timeline.Time>
-                        <input placeholder="กรุณาระบุเวลา" />
-                      </Timeline.Time>
-                      <Timeline.Title>
-                        <Link to={`/places/${place.place_id}`}>{place.name}</Link>
-                      </Timeline.Title>
-                      <Timeline.Body>{place.formatted_address}</Timeline.Body>
-                      <Button size="xs" color="dark" onClick={() => handleDelete(place, index)}>
-                        ลบ
-                      </Button>
-                      <p className="my-8">
-                        {durations.length > index && durations[index].durationInMins
-                          ? `${durations[index].durationInMins} --- ${durations[index].distanceInKiloMeters} กิโลเมตร`
-                          : ''}
-                      </p>
+            <div>
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="places">
+                  {(provided) => (
+                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                      <Timeline className="m-4">
+                        <Timeline.Item>
+                          <Timeline.Content className="space-y-8">
+                            {selectedPlace.map((place, index) => (
+                              <Draggable
+                                key={place.place_id}
+                                draggableId={place.place_id}
+                                index={index}
+                              >
+                                {(provided) => (
+                                  <div
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    ref={provided.innerRef}
+                                  >
+                                    <Timeline.Point />
+                                    <Timeline.Time>
+                                      <input placeholder="กรุณาระบุวันและเวลา" />
+                                    </Timeline.Time>
+                                    <>
+                                      {place.photos && place.photos.length > 0 && (
+                                        <img
+                                          src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${place.photos[0].photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
+                                          alt={place.name}
+                                          className="h-28 md:h-60 w-auto object-cover"
+                                        />
+                                      )}
+                                    </>
+                                    <Timeline.Title>
+                                      <Link to={`/places/${place.place_id}`}>{place.name}</Link>
+                                    </Timeline.Title>
+                                    <Timeline.Body>
+                                      <Rating>
+                                        <Rating.Star />
+                                        <p>{place.rating}</p>
+                                      </Rating>
+                                    </Timeline.Body>
+                                    <Button
+                                      size="xs"
+                                      color="dark"
+                                      onClick={() => handleDelete(place, index)}
+                                    >
+                                      ลบ
+                                    </Button>
+                                    <div className="my-4">
+                                      {durations.length > index &&
+                                      durations[index].durationInMins ? (
+                                        <p className="flex gap-2">
+                                          <TruckIcon className="h-6 w-6 text-gray-500" />
+                                          <span>{durations[index].durationInMins}</span>
+                                          <span>
+                                            ~ {durations[index].distanceInKiloMeters} กิโลเมตร
+                                          </span>
+                                        </p>
+                                      ) : (
+                                        ''
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </Timeline.Content>
+                        </Timeline.Item>
+                      </Timeline>
                     </div>
-                  ))}
-                </Timeline.Content>
-              </Timeline.Item>
-            </Timeline>
+                  )}
+                </Droppable>
+              </DragDropContext>
+            </div>
           )}
         </div>
       ) : (
