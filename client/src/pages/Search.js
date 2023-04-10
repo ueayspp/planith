@@ -1,8 +1,6 @@
 import axios from 'axios'
-import { useState, useEffect, useContext } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-
-import { UserContext } from '../contexts/UserContext'
 
 import { Badge, Button, Card, Checkbox, Modal, Rating, TextInput } from 'flowbite-react'
 
@@ -90,23 +88,40 @@ function Search() {
   }
 
   // Select Place
-  // Store selectedPlace to localStorage
   function handleSelect(place) {
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
 
-    // Initialize tripPlanData.cart to an empty array if it is not defined
-    tripPlanData.cart = tripPlanData.cart || []
+    // Check if the planner already create or not
+    // If create already, add new place to cart and last day of planner
+    if (tripPlanData.planner) {
+      // Access the last key in the "planner" object
+      const keys = Object.keys(tripPlanData.planner)
+      const lastKey = keys[keys.length - 1]
+      // Update the new selected place data to the cart
+      const updatedSelectedPlace = [...tripPlanData.cart, place]
+      tripPlanData.cart = updatedSelectedPlace
 
-    // Add the selected place to the cart
-    const updatedSelectedPlace = [...tripPlanData.cart, place]
+      // Push the new item to the last key in the planner object
+      tripPlanData.planner[lastKey].push([place, { time: '' }])
 
-    // Update the selected place data
-    tripPlanData.cart = updatedSelectedPlace
+      // Update state and localStorage
+      setSelectedPlace(updatedSelectedPlace)
+      setNumSelectedPlaces(updatedSelectedPlace.length)
+      localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+    } else {
+      tripPlanData.cart = tripPlanData.cart || []
 
-    // Update state and localStorage
-    setSelectedPlace(updatedSelectedPlace)
-    setNumSelectedPlaces(updatedSelectedPlace.length)
-    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+      // Add the selected place to the cart
+      const updatedSelectedPlace = [...tripPlanData.cart, place]
+
+      // Update the selected place data
+      tripPlanData.cart = updatedSelectedPlace
+
+      // Update state and localStorage
+      setSelectedPlace(updatedSelectedPlace)
+      setNumSelectedPlaces(updatedSelectedPlace.length)
+      localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+    }
 
     setMethod('ADD')
     setShowToast(true)
@@ -119,16 +134,42 @@ function Search() {
   function handleUnselect(place) {
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
 
-    // Remove the selected place from the cart
-    const updatedSelectedPlace = tripPlanData.cart.filter((p) => p.place_id !== place.place_id)
+    // Check if the planner create or not?
+    // If create already, delete the place from planner and cart
+    const itinerary = tripPlanData.planner
+    if (tripPlanData.planner) {
+      // find the day that contains the place to delete
+      const day = Object.keys(itinerary).find((day) => {
+        return itinerary[day].find((item) => item[0].place_id === place.place_id)
+      })
+      // remove the place from the day
+      const updatedPlanner = { ...itinerary }
+      updatedPlanner[day] = updatedPlanner[day].filter((item) => {
+        return item[0].place_id !== place.place_id
+      })
+      // remove the place from the cart
+      const updatedSelectedPlace = tripPlanData.cart.filter((item) => {
+        return item.place_id !== place.place_id
+      })
 
-    // Update the selected place data
-    tripPlanData.cart = updatedSelectedPlace
+      // Update state and localStorage
+      tripPlanData.cart = updatedSelectedPlace
+      tripPlanData.planner = updatedPlanner
+      setSelectedPlace(updatedSelectedPlace)
+      setNumSelectedPlaces(updatedSelectedPlace.length)
+      localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+    } else {
+      // Remove the selected place from the cart
+      const updatedSelectedPlace = tripPlanData.cart.filter((p) => p.place_id !== place.place_id)
 
-    // Update state and localStorage
-    setSelectedPlace(updatedSelectedPlace)
-    setNumSelectedPlaces(updatedSelectedPlace.length)
-    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+      // Update the selected place data
+      tripPlanData.cart = updatedSelectedPlace
+
+      // Update state and localStorage
+      setSelectedPlace(updatedSelectedPlace)
+      setNumSelectedPlaces(updatedSelectedPlace.length)
+      localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+    }
 
     setMethod('DEL')
     setShowToast(true)
@@ -151,22 +192,45 @@ function Search() {
   function handleCheckboxDelete(place, index) {
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
 
-    const updatedSelectedPlace = selectedPlace.filter((place, index) => {
-      return !checkboxItems.includes(index)
+    const updatedSelectedPlace = selectedPlace.filter((place, i) => {
+      return !checkboxItems.includes(i)
     })
 
     const updatedCheckboxItems = checkboxItems.filter(
       (item) => item !== index && item < updatedSelectedPlace.length
     )
 
-    // Update the selected place data
-    tripPlanData.cart = updatedSelectedPlace
+    if (tripPlanData.planner) {
+      const checkboxPlaces = selectedPlace[checkboxItems]
 
-    // Update state and localStorage
-    setCheckboxItems(updatedCheckboxItems)
-    setSelectedPlace(updatedSelectedPlace)
-    setNumSelectedPlaces(updatedSelectedPlace.length)
-    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+      // find the day that contains the place to delete
+      const updatedPlanner = tripPlanData.planner
+      const day = Object.keys(updatedPlanner).find((day) => {
+        return updatedPlanner[day].find((item) => item[0].place_id === checkboxPlaces.place_id)
+      })
+      updatedPlanner[day] = updatedPlanner[day].filter((item) => {
+        return item[0].place_id !== checkboxPlaces.place_id
+      })
+
+      // Update the selected place data
+      tripPlanData.cart = updatedSelectedPlace
+      tripPlanData.planner = updatedPlanner
+
+      // Update state and localStorage
+      setCheckboxItems(updatedCheckboxItems)
+      setSelectedPlace(updatedSelectedPlace)
+      setNumSelectedPlaces(updatedSelectedPlace.length)
+      localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+    } else {
+      // Update the selected place data
+      tripPlanData.cart = updatedSelectedPlace
+
+      // Update state and localStorage
+      setCheckboxItems(updatedCheckboxItems)
+      setSelectedPlace(updatedSelectedPlace)
+      setNumSelectedPlaces(updatedSelectedPlace.length)
+      localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+    }
   }
 
   return (
