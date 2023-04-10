@@ -58,33 +58,37 @@ const getPlace = async (req, res) => {
     })
 }
 
-// Get durations
+// Get durations for each day
 const getDurations = async (req, res) => {
-  const durations = []
+  const durations = {}
 
   const placeIds = req.query.placeIds
+  for (const day in placeIds) {
+    const dayPlaceIds = placeIds[day]
+    const origins = dayPlaceIds.slice(0, -1)
+    const destinations = dayPlaceIds.slice(1)
 
-  const origins = placeIds.slice(0, -1) // remove last index
-  const destinations = placeIds.slice(1) // remove first index
+    const dayDurations = []
+    for (let i = 0; i < origins.length; i++) {
+      const origin = origins[i]
+      const destination = destinations[i]
+      const response = await axios.get(DIRECTIONS_URL, {
+        params: {
+          origin: `place_id:${origin}`,
+          destination: `place_id:${destination}`,
+          language: 'th',
+          key: API_KEY,
+        },
+      })
 
-  for (let i = 0; i < origins.length; i++) {
-    const origin = origins[i]
-    const destination = destinations[i]
+      const route = response.data.routes[0]
+      const leg = route.legs[0]
+      const durationInMins = leg.duration.text
+      const distanceInKiloMeters = (leg.distance.value / 1000).toFixed(1)
+      dayDurations.push({ durationInMins, distanceInKiloMeters })
+    }
 
-    const response = await axios.get(DIRECTIONS_URL, {
-      params: {
-        origin: `place_id:${origin}`,
-        destination: `place_id:${destination}`,
-        language: 'th',
-        key: API_KEY,
-      },
-    })
-
-    const route = response.data.routes[0]
-    const leg = route.legs[0]
-    const durationInMins = leg.duration.text
-    const distanceInKiloMeters = (leg.distance.value / 1000).toFixed(1)
-    durations.push({ durationInMins, distanceInKiloMeters })
+    durations[day] = dayDurations
   }
 
   console.log(durations)
