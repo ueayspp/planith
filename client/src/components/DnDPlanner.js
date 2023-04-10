@@ -5,6 +5,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Badge, Button, Rating, Spinner, Timeline } from 'flowbite-react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
+import { ArrowLongLeftIcon } from '@heroicons/react/24/outline'
+
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 
@@ -30,14 +32,18 @@ function DnDPlanner() {
     if (tripPlanData) {
       setTripPlan(tripPlanData)
 
-      if (tripPlanData.planner) {
-        setItinerary(tripPlanData.planner)
-        getDurations()
-      } else {
-        createPlanner()
+      if (tripPlanData.cart) {
+        if (tripPlanData.planner) {
+          setItinerary(tripPlanData.planner)
+          // getDurations()
+        } else {
+          createPlanner()
+        }
       }
     }
   }, [])
+
+  console.log('tripPlan', tripPlan)
 
   // Get durations between places from localstorage
   async function getDurations() {
@@ -103,7 +109,7 @@ function DnDPlanner() {
     tripPlanData.planner = itinerary
     localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
 
-    getDurations()
+    // getDurations()
   }
 
   function handleDelete(place) {
@@ -134,7 +140,7 @@ function DnDPlanner() {
       setShowToast(false)
     }, 1000)
 
-    getDurations()
+    // getDurations()
   }
 
   function deletePlanner() {
@@ -184,16 +190,46 @@ function DnDPlanner() {
       localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
     }
 
-    getDurations()
+    // getDurations()
   }
 
   return (
     <div>
       {showToast && <ToastMessage method={method} />}
 
-      <div>
-        <button onClick={deletePlanner}>ลบแพลน</button>
-      </div>
+      {tripPlan.length !== 0 ? (
+        tripPlan.cart ? (
+          tripPlan.planner && Object.keys(tripPlan.planner).length !== 0 ? (
+            <button onClick={deletePlanner}>ลบแพลน</button>
+          ) : (
+            <div>
+              <span>กรุณากรอกจำนวนผู้เดินทาง วันออกเดินทาง และวันเดินทางกลับก่อนจัดแพลนเนอร์</span>
+              <Button color="dark" onClick={() => navigate('/')}>
+                <ArrowLongLeftIcon className="h-5 w-5 text-white" />
+                ไปกรอกข้อมูล
+              </Button>
+            </div>
+          )
+        ) : (
+          <div>
+            <span>
+              โอ๊ะโอ คุณยังไม่ได้เลือกสถานที่ <br /> กรุณาเลือกสถานที่ก่อนจัดแพลนเนอร์
+            </span>
+            <Button color="dark" onClick={() => navigate('/search')}>
+              <ArrowLongLeftIcon className="h-5 w-5 text-white" />
+              ไปเลือกสถานที่
+            </Button>
+          </div>
+        )
+      ) : (
+        <div>
+          <span>โปรดป้อนข้อมูลและเลือกสถานที่ก่อนจัดแพลนเนอร์</span>
+          <Button color="dark" onClick={() => navigate('/')}>
+            <ArrowLongLeftIcon className="h-5 w-5 text-white" />
+            ไปกรอกข้อมูล
+          </Button>
+        </div>
+      )}
 
       <br />
 
@@ -274,7 +310,7 @@ function DnDPlanner() {
           ))}
         </DragDropContext>
       ) : (
-        'ยังไม่ได้สร้างแพลนเนอร์'
+        ''
       )}
     </div>
   )
