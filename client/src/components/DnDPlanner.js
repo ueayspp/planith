@@ -11,7 +11,8 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/th'
 
 // components
-import ToastMessage from '../components/ToastMessage'
+import ToastMessage from './ToastMessage'
+import AlertMessage from './AlertMessage'
 
 function DnDPlanner() {
   const navigate = useNavigate()
@@ -23,8 +24,10 @@ function DnDPlanner() {
   const [loading, setLoading] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [method, setMethod] = useState()
+  const [showAlert, setShowAlert] = useState(false)
 
   const [itinerary, setItinerary] = useState()
+  const [time, setTime] = useState()
 
   useEffect(() => {
     // Get tripPlanData from localStorage
@@ -42,8 +45,6 @@ function DnDPlanner() {
       }
     }
   }, [])
-
-  console.log('tripPlan', tripPlan)
 
   // Get durations between places from localstorage
   async function getDurations() {
@@ -193,9 +194,43 @@ function DnDPlanner() {
     // getDurations()
   }
 
+  function handlePlaceTime(place) {
+    const tripPlan = JSON.parse(localStorage.getItem('tripPlan'))
+
+    // Validate the format of the new time using regex
+    const regex = /^(0?[0-9]|1[0-9]|2[0-3])\.([0-5][0-9])$/
+    if (!regex.test(time)) {
+      // Show an error message and return early if the format is incorrect
+      setShowAlert(true)
+      setTimeout(() => {
+        setShowAlert(false)
+      }, 1000)
+      return
+    }
+
+    if (time)
+      for (const day in tripPlan.planner) {
+        for (const item of tripPlan.planner[day]) {
+          if (item[0].place_id === place.place_id) {
+            item[1].time = time
+            console.log('Found place:', place.place_id, 'in day:', day)
+            localStorage.setItem('tripPlan', JSON.stringify(tripPlan))
+            console.log('Updated time:', time, 'in local storage')
+            return
+          }
+        }
+      }
+  }
+
   return (
     <div>
       {showToast && <ToastMessage method={method} />}
+      {showAlert && (
+        <AlertMessage
+          message="รูปแบบไม่ถูกต้อง กรุณากรอกเวลาในรูปแบบ HH.MM (เช่น 09.30)"
+          color="failure"
+        />
+      )}
 
       {tripPlan.length !== 0 ? (
         tripPlan.cart ? (
@@ -261,8 +296,20 @@ function DnDPlanner() {
                               >
                                 <Timeline.Point />
                                 <Timeline.Time>
-                                  {item[1].time}
-                                  <input placeholder="กรุณาระบุเวลา" />
+                                  {item[1].time === '' ? (
+                                    <input
+                                      placeholder="กรุณาระบุเวลา"
+                                      defaultValue={item[1].time}
+                                      onBlur={() => handlePlaceTime(item[0])}
+                                      onChange={(event) => setTime(event.target.value)}
+                                    />
+                                  ) : (
+                                    <input
+                                      defaultValue={item[1].time}
+                                      onBlur={() => handlePlaceTime(item[0])}
+                                      onChange={(event) => setTime(event.target.value)}
+                                    />
+                                  )}
                                 </Timeline.Time>
                                 <>
                                   {item[0].photos && item[0].photos.length > 0 && (
