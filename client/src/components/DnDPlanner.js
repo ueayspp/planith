@@ -1,8 +1,10 @@
 import axios from 'axios'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-import { Badge, Button, Rating, Spinner, Timeline } from 'flowbite-react'
+import html2canvas from 'html2canvas'
+
+import { Badge, Button, Rating, Timeline } from 'flowbite-react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
 import { ArrowLongLeftIcon } from '@heroicons/react/24/outline'
@@ -21,13 +23,14 @@ function DnDPlanner() {
 
   const [durations, setDurations] = useState([])
 
-  const [loading, setLoading] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [method, setMethod] = useState()
   const [showAlert, setShowAlert] = useState(false)
 
   const [itinerary, setItinerary] = useState()
   const [time, setTime] = useState()
+
+  const divRef = useRef()
 
   useEffect(() => {
     // Get tripPlanData from localStorage
@@ -44,6 +47,9 @@ function DnDPlanner() {
         }
       }
     }
+
+    console.log(tripPlan)
+    console.log(tripPlan.planner)
   }, [])
 
   // Get durations between places from localstorage
@@ -70,7 +76,6 @@ function DnDPlanner() {
     } catch (error) {
       console.log(error)
     }
-    setLoading(false)
   }
 
   // Create planner
@@ -222,6 +227,24 @@ function DnDPlanner() {
       }
   }
 
+  function handleDownload() {
+    const div = divRef.current
+
+    div.style.display = 'block'
+
+    html2canvas(div, {
+      allowTaint: true,
+      useCORS: true,
+    }).then(function (canvas) {
+      const link = document.createElement('a')
+      link.download = 'planner.png'
+      link.href = canvas.toDataURL()
+      link.click()
+    })
+
+    div.style.display = 'none'
+  }
+
   return (
     <div>
       {showToast && <ToastMessage method={method} />}
@@ -234,8 +257,15 @@ function DnDPlanner() {
 
       {tripPlan.length !== 0 ? (
         tripPlan.cart ? (
-          tripPlan.planner && Object.keys(tripPlan.planner).length !== 0 ? (
-            <button onClick={deletePlanner}>ลบแพลน</button>
+          itinerary ? (
+            <div>
+              <Button color="dark" size="sm" onClick={deletePlanner}>
+                ลบแพลน
+              </Button>
+              <Button color="dark" size="sm" onClick={handleDownload}>
+                ดาวน์โหลดแพลน
+              </Button>
+            </div>
           ) : (
             <div>
               <span>กรุณากรอกจำนวนผู้เดินทาง วันออกเดินทาง และวันเดินทางกลับก่อนจัดแพลนเนอร์</span>
@@ -268,97 +298,163 @@ function DnDPlanner() {
 
       <br />
 
-      {itinerary ? (
-        <DragDropContext onDragEnd={onDragEnd}>
-          {Object.keys(itinerary).map((day, index) => (
-            <Droppable key={day} droppableId={day}>
-              {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  <div className="flex m-2">
-                    <Badge className="p-4 rounded-full" color="gray" size="sm">
-                      {day}
-                    </Badge>
-                  </div>
-                  <Timeline className="m-4">
-                    <Timeline.Item>
-                      <Timeline.Content className="space-y-2">
-                        {itinerary[day].map((item, itemIndex) => (
-                          <Draggable
-                            key={item[0].place_id}
-                            draggableId={item[0].place_id}
-                            index={itemIndex}
-                          >
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                              >
-                                <Timeline.Point />
-                                <Timeline.Time>
-                                  {item[1].time === '' ? (
-                                    <input
-                                      placeholder="กรุณาระบุเวลา"
-                                      defaultValue={item[1].time}
-                                      onBlur={() => handlePlaceTime(item[0])}
-                                      onChange={(event) => setTime(event.target.value)}
-                                    />
-                                  ) : (
-                                    <input
-                                      defaultValue={item[1].time}
-                                      onBlur={() => handlePlaceTime(item[0])}
-                                      onChange={(event) => setTime(event.target.value)}
-                                    />
-                                  )}
-                                </Timeline.Time>
-                                <>
-                                  {item[0].photos && item[0].photos.length > 0 && (
-                                    <img
-                                      src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${item[0].photos[0].photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
-                                      alt={item[0].name}
-                                      className="h-28 md:h-60 w-auto object-cover"
-                                    />
-                                  )}
-                                </>
-                                <Timeline.Title>
-                                  <Link to={`/places/${item[0].place_id}`}>{item[0].name}</Link>
-                                </Timeline.Title>
-                                <Timeline.Body>
-                                  <Rating>
-                                    <Rating.Star />
-                                    <p>{item[0].rating}</p>
-                                  </Rating>
-                                </Timeline.Body>
-                                <Button
-                                  size="xs"
-                                  color="dark"
-                                  onClick={() => handleDelete(item[0])}
+      <div>
+        {itinerary ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            {Object.keys(itinerary).map((day, index) => (
+              <Droppable key={day} droppableId={day}>
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps}>
+                    <div className="flex m-2">
+                      <Badge className="p-4 rounded-full" color="gray" size="sm">
+                        {day}
+                      </Badge>
+                    </div>
+                    <Timeline className="m-4">
+                      <Timeline.Item>
+                        <Timeline.Content className="space-y-2">
+                          {itinerary[day].map((item, itemIndex) => (
+                            <Draggable
+                              key={item[0].place_id}
+                              draggableId={item[0].place_id}
+                              index={itemIndex}
+                            >
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
                                 >
-                                  ลบ
-                                </Button>
-                                {durations[day] && durations[day][itemIndex] && (
-                                  <div>
-                                    ระยะเวลา: {durations[day][itemIndex].durationInMins}
-                                    <br />
-                                    ระยะทาง: {durations[day][itemIndex].distanceInKiloMeters} km
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </Timeline.Content>
-                    </Timeline.Item>
-                  </Timeline>
+                                  <Timeline.Point />
+                                  <Timeline.Time>
+                                    <div className="my-2">
+                                      {item[1].time === '' ? (
+                                        <input
+                                          placeholder="กรุณาระบุเวลา"
+                                          defaultValue={item[1].time}
+                                          onBlur={() => handlePlaceTime(item[0])}
+                                          onChange={(event) => setTime(event.target.value)}
+                                        />
+                                      ) : (
+                                        <input
+                                          defaultValue={item[1].time}
+                                          onBlur={() => handlePlaceTime(item[0])}
+                                          onChange={(event) => setTime(event.target.value)}
+                                        />
+                                      )}
+                                    </div>
+                                  </Timeline.Time>
+                                  <>
+                                    {item[0].photos && item[0].photos.length > 0 && (
+                                      <img
+                                        src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${item[0].photos[0].photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
+                                        alt={item[0].name}
+                                        className="h-28 md:h-60 w-auto object-cover"
+                                      />
+                                    )}
+                                  </>
+                                  <Timeline.Title>
+                                    <Link to={`/places/${item[0].place_id}`}>{item[0].name}</Link>
+                                  </Timeline.Title>
+                                  <Timeline.Body>
+                                    <Rating>
+                                      <Rating.Star />
+                                      <p>{item[0].rating}</p>
+                                    </Rating>
+                                  </Timeline.Body>
+                                  <Button
+                                    size="xs"
+                                    color="dark"
+                                    onClick={() => handleDelete(item[0])}
+                                  >
+                                    ลบ
+                                  </Button>
+                                  {durations[day] && durations[day][itemIndex] && (
+                                    <div>
+                                      ระยะเวลา: {durations[day][itemIndex].durationInMins}
+                                      <br />
+                                      ระยะทาง: {durations[day][itemIndex].distanceInKiloMeters} km
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </Timeline.Content>
+                      </Timeline.Item>
+                    </Timeline>
+                  </div>
+                )}
+              </Droppable>
+            ))}
+          </DragDropContext>
+        ) : (
+          ''
+        )}
+      </div>
+
+      <div ref={divRef} style={{ display: 'none' }} className="p-4">
+        {itinerary
+          ? Object.keys(itinerary).map((day, index) => (
+              <div className="flex flex-col">
+                <div className="flex m-2">
+                  <Badge className="p-4 rounded-full" color="gray" size="sm">
+                    <p className="inline-block align-middle">{day}</p>
+                  </Badge>
                 </div>
-              )}
-            </Droppable>
-          ))}
-        </DragDropContext>
-      ) : (
-        ''
-      )}
+                <Timeline className="m-4">
+                  <Timeline.Item>
+                    <Timeline.Content className="space-y-4">
+                      {itinerary[day].map((item, itemIndex) => (
+                        <div className="space-y-2">
+                          <Timeline.Point />
+                          <Timeline.Time>
+                            <div className="">
+                              {item[1].time === '' ? (
+                                <input
+                                  placeholder="กรุณาระบุเวลา"
+                                  defaultValue={item[1].time}
+                                  onBlur={() => handlePlaceTime(item[0])}
+                                  onChange={(event) => setTime(event.target.value)}
+                                />
+                              ) : (
+                                <input
+                                  defaultValue={item[1].time}
+                                  onBlur={() => handlePlaceTime(item[0])}
+                                  onChange={(event) => setTime(event.target.value)}
+                                />
+                              )}
+                            </div>
+                          </Timeline.Time>
+                          <br />
+                          <Timeline.Title>
+                            <p>{item[0].name}</p>
+                          </Timeline.Title>
+                          <Timeline.Body className="space-y-2">
+                            <Badge className="p-4 w-fit rounded-full" color="success" size="sm">
+                              {item[0].types[0]}
+                            </Badge>
+                            <Rating>
+                              <Rating.Star />
+                              <p>{item[0].rating}</p>
+                            </Rating>
+                          </Timeline.Body>
+                          {durations[day] && durations[day][itemIndex] && (
+                            <div className="flex">
+                              ระยะเวลา: {durations[day][itemIndex].durationInMins}
+                              ระยะทาง: {durations[day][itemIndex].distanceInKiloMeters} กม.
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </Timeline.Content>
+                  </Timeline.Item>
+                </Timeline>
+              </div>
+            ))
+          : ''}
+      </div>
     </div>
   )
 }
