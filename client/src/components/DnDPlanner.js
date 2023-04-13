@@ -41,15 +41,12 @@ function DnDPlanner() {
       if (tripPlanData.cart) {
         if (tripPlanData.planner) {
           setItinerary(tripPlanData.planner)
-          // getDurations()
+          getDurations()
         } else {
           createPlanner()
         }
       }
     }
-
-    console.log(tripPlan)
-    console.log(tripPlan.planner)
   }, [])
 
   // Get durations between places from localstorage
@@ -115,7 +112,7 @@ function DnDPlanner() {
     tripPlanData.planner = itinerary
     localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
 
-    // getDurations()
+    getDurations()
   }
 
   function handleDelete(place) {
@@ -146,13 +143,10 @@ function DnDPlanner() {
       setShowToast(false)
     }, 1000)
 
-    // getDurations()
+    getDurations()
   }
 
   function deletePlanner() {
-    // const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
-    // delete tripPlanData.planner
-    // setItinerary()
     setItinerary()
     localStorage.removeItem('tripPlan')
     navigate('/')
@@ -196,7 +190,7 @@ function DnDPlanner() {
       localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
     }
 
-    // getDurations()
+    getDurations()
   }
 
   function handlePlaceTime(place) {
