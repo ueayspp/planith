@@ -7,7 +7,7 @@ import html2canvas from 'html2canvas'
 import { Badge, Button, Rating, Timeline } from 'flowbite-react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
-import { ArrowLongLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLongLeftIcon, TruckIcon } from '@heroicons/react/24/outline'
 
 import dayjs from 'dayjs'
 import 'dayjs/locale/th'
@@ -240,7 +240,7 @@ function DnDPlanner() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col justify-center">
       {showToast && <ToastMessage method={method} />}
       {showAlert && (
         <AlertMessage
@@ -252,12 +252,12 @@ function DnDPlanner() {
       {tripPlan.length !== 0 ? (
         tripPlan.cart ? (
           itinerary ? (
-            <div>
-              <Button color="dark" size="sm" onClick={deletePlanner}>
-                ลบแพลน
-              </Button>
+            <div className="flex mb-4 justify-between md:justify-between lg:justify-end gap-4">
               <Button color="dark" size="sm" onClick={handleDownload}>
                 ดาวน์โหลดแพลน
+              </Button>
+              <Button color="failure" size="sm" onClick={deletePlanner}>
+                ลบแพลน
               </Button>
             </div>
           ) : (
@@ -290,9 +290,7 @@ function DnDPlanner() {
         </div>
       )}
 
-      <br />
-
-      <div>
+      <div className="flex flex-col w-fit">
         {itinerary ? (
           <DragDropContext onDragEnd={onDragEnd}>
             {Object.keys(itinerary).map((day, index) => (
@@ -304,7 +302,7 @@ function DnDPlanner() {
                         {day}
                       </Badge>
                     </div>
-                    <Timeline className="m-4">
+                    <Timeline>
                       <Timeline.Item>
                         <Timeline.Content className="space-y-2">
                           {itinerary[day].map((item, itemIndex) => (
@@ -318,6 +316,7 @@ function DnDPlanner() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
+                                  className="space-y-4"
                                 >
                                   <Timeline.Point />
                                   <Timeline.Time>
@@ -351,6 +350,13 @@ function DnDPlanner() {
                                     <Link to={`/places/${item[0].place_id}`}>{item[0].name}</Link>
                                   </Timeline.Title>
                                   <Timeline.Body>
+                                    <Badge
+                                      className="p-4 w-fit rounded-full"
+                                      color="success"
+                                      size="sm"
+                                    >
+                                      {item[0].types[0]}
+                                    </Badge>
                                     <Rating>
                                       <Rating.Star />
                                       <p>{item[0].rating}</p>
@@ -364,12 +370,13 @@ function DnDPlanner() {
                                     ลบ
                                   </Button>
                                   {durations[day] && durations[day][itemIndex] && (
-                                    <div>
-                                      ระยะเวลา: {durations[day][itemIndex].durationInMins}
-                                      <br />
-                                      ระยะทาง: {durations[day][itemIndex].distanceInKiloMeters} km
+                                    <div className="flex gap-2">
+                                      <TruckIcon className="h-6 w-6 text-gray-500" />
+                                      <p>{durations[day][itemIndex].durationInMins}</p>
+                                      <p> {durations[day][itemIndex].distanceInKiloMeters} กม.</p>
                                     </div>
                                   )}
+                                  <br />
                                 </div>
                               )}
                             </Draggable>
@@ -435,9 +442,10 @@ function DnDPlanner() {
                             </Rating>
                           </Timeline.Body>
                           {durations[day] && durations[day][itemIndex] && (
-                            <div className="flex">
-                              ระยะเวลา: {durations[day][itemIndex].durationInMins}
-                              ระยะทาง: {durations[day][itemIndex].distanceInKiloMeters} กม.
+                            <div className="flex gap-2">
+                              <TruckIcon className="h-6 w-6 text-gray-500" />
+                              <p>{durations[day][itemIndex].durationInMins}</p>
+                              <p> {durations[day][itemIndex].distanceInKiloMeters} กม.</p>
                             </div>
                           )}
                         </div>

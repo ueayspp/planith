@@ -4,7 +4,10 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { Badge, Button, Card, Checkbox, Modal, Rating, TextInput } from 'flowbite-react'
 
+import { PlusSmallIcon, SparklesIcon } from '@heroicons/react/24/solid'
+
 // components
+import Navbar from '../components/Navbar'
 import AlertMessage from '../components/AlertMessage'
 import ToastMessage from '../components/ToastMessage'
 
@@ -50,9 +53,10 @@ function Search() {
       }
 
       try {
-        const response = await axios.get('/api/places/', { params })
+        const response = await axios.get('/api/places/search', { params })
         setPlaces(response.data.results)
         setNextPageToken(response.data.nextPageToken)
+        console.log(nextPageToken)
         setLoading(false)
       } catch (error) {
         console.log(error)
@@ -77,7 +81,7 @@ function Search() {
     }
 
     try {
-      const response = await axios.get('/api/places/', { params })
+      const response = await axios.get('/api/places/search', { params })
       setPlaces([...places, ...response.data.results])
       setNextPageToken(response.data.nextPageToken)
       setLoading(false)
@@ -234,99 +238,126 @@ function Search() {
   }
 
   return (
-    <div>
-      {showAlert && <AlertMessage message="กรุณากรอกสถานที่" color="failure" />}
-      {showToast && <ToastMessage method={method} />}
+    <div className="h-screen bg-almond-beige">
+      <Navbar />
+      <div className="p-8 space-y-2 md:px-20 md:space-y-8 bg-almond-beige">
+        {showAlert && <AlertMessage message="กรุณากรอกสถานที่" color="failure" />}
+        {showToast && <ToastMessage method={method} />}
 
-      <form onSubmit={handleSearch}>
-        <label htmlFor="query">ค้นหาสถานที่</label>
-        <br />
-        <TextInput
-          type="text"
-          id="query"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="เช่น กรุงเทพ"
-        />
-        <Button color="dark" type="submit">
-          ค้นหา
+        <div className="lg:px-60 xl:px-72">
+          <form onSubmit={handleSearch} className="flex flex-col justify-center gap-2">
+            <span className="flex justify-center">
+              <label
+                htmlFor="query"
+                id="header-logo"
+                className="text-7xl text-center text-green-700"
+              >
+                Explore
+              </label>
+              <SparklesIcon className="h-5 w-5 text-green-700" />
+            </span>
+
+            <p className="text-center">ลองค้นหาสถานที่ในไทยดูสิ !</p>
+            <br />
+            <TextInput
+              type="text"
+              id="query"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="เช่น กรุงเทพ"
+            />
+            <Button className="bg-orange-700 hover:bg-orange-800" type="submit">
+              ค้นหา
+            </Button>
+          </form>
+        </div>
+
+        <Button
+          color="light"
+          onClick={() => setShowModal(true)}
+          className="fixed z-5 bottom-5 right-5 md:bottom-20 md:right-20"
+        >
+          รายการสถานที่ที่เลือก{' '}
+          {numSelectedPlaces > 0 ? <Badge color="dark">{numSelectedPlaces}</Badge> : ''}
         </Button>
-      </form>
 
-      <Button color="light" onClick={() => setShowModal(true)}>
-        เลือก {numSelectedPlaces > 0 ? <Badge color="dark">{numSelectedPlaces}</Badge> : ''}
-      </Button>
-      <Modal dismissible={true} show={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>สถานที่ท่องเที่ยวที่เลือก</Modal.Header>
-        <Modal.Body className="space-y-2">
-          {numSelectedPlaces > 0 ? (
-            selectedPlace.map((place, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Checkbox id="index" onChange={() => handleCheckboxChange(index)} />
-                <p>{place.name}</p>
-              </div>
-            ))
-          ) : (
-            <div>คุณยังไม่ได้เลือกสถานที่</div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          {numSelectedPlaces > 0 ? (
-            checkboxItems.length > 0 ? (
-              <Button color="failure" onClick={handleCheckboxDelete}>
-                ลบ
-              </Button>
+        <Modal dismissible={true} show={showModal} onClose={() => setShowModal(false)}>
+          <Modal.Header>สถานที่ท่องเที่ยวที่เลือก</Modal.Header>
+          <Modal.Body className="space-y-2">
+            {numSelectedPlaces > 0 ? (
+              selectedPlace.map((place, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Checkbox id="index" onChange={() => handleCheckboxChange(index)} />
+                  <p>{place.name}</p>
+                </div>
+              ))
             ) : (
-              <Button color="dark" onClick={() => navigate('/planner')}>
-                จัดแพลน
-              </Button>
-            )
-          ) : (
-            ''
-          )}
-        </Modal.Footer>
-      </Modal>
-
-      {loading ? (
-        <p>กำลังโหลด...</p>
-      ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {places.map((place) => (
-            <Card className="flex" key={place.place_id}>
-              {place.photos && place.photos.length > 0 && (
-                <img
-                  src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${place.photos[0].photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
-                  alt={place.name}
-                  className="h-48 md:h-60 w-auto object-cover"
-                />
-              )}
-              <Link to={`/places/${place.place_id}`}>{place.name}</Link>
-              <Rating>
-                <Rating.Star />
-                <p>{place.rating}</p>
-                <span className="mx-1.5 h-1 w-1 rounded-full bg-gray-500 dark:bg-gray-400" />
-                <p>{place.user_ratings_total} รีวิว</p>
-              </Rating>
-              <p>{place.formatted_address}</p>
-
-              {selectedPlace.find((p) => p.place_id === place.place_id) ? (
-                <Button color="light" onClick={() => handleUnselect(place)}>
-                  เลือกแล้ว
+              <div>คุณยังไม่ได้เลือกสถานที่</div>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            {numSelectedPlaces > 0 ? (
+              checkboxItems.length > 0 ? (
+                <Button color="failure" onClick={handleCheckboxDelete}>
+                  ลบ
                 </Button>
               ) : (
-                <Button color="dark" onClick={() => handleSelect(place)}>
-                  เลือก
+                <Button color="dark" onClick={() => navigate('/planner')}>
+                  จัดแพลน
                 </Button>
-              )}
-            </Card>
-          ))}
-        </div>
-      )}
-      {nextPageToken && (
-        <Button color="light" onClick={handleNextPage}>
-          โหลดเพิ่ม
-        </Button>
-      )}
+              )
+            ) : (
+              ''
+            )}
+          </Modal.Footer>
+        </Modal>
+
+        {loading ? (
+          <p>กำลังโหลด...</p>
+        ) : (
+          <div className="h-fit bg-almond-beige">
+            <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {places.map((place) => (
+                <Card className="flex" key={place.place_id}>
+                  {place.photos && place.photos.length > 0 && (
+                    <img
+                      src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${place.photos[0].photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
+                      alt={place.name}
+                      className="h-40 md:h-48 w-auto object-cover"
+                    />
+                  )}
+                  <Link to={`/places/${place.place_id}`}>{place.name}</Link>
+                  <Rating>
+                    <Rating.Star />
+                    <p>{place.rating}</p>
+                    <span className="mx-1.5 h-1 w-1 rounded-full bg-gray-500 dark:bg-gray-400" />
+                    <p>{place.user_ratings_total} รีวิว</p>
+                  </Rating>
+                  <p>{place.formatted_address}</p>
+
+                  {selectedPlace.find((p) => p.place_id === place.place_id) ? (
+                    <Button color="light" onClick={() => handleUnselect(place)}>
+                      เลือกแล้ว
+                    </Button>
+                  ) : (
+                    <Button color="dark" onClick={() => handleSelect(place)}>
+                      <PlusSmallIcon className="h-5 w-5 text-white" />
+                      เลือก
+                    </Button>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        {nextPageToken && (
+          <div className="flex justify-center">
+            <Button color="light" onClick={handleNextPage}>
+              โหลดเพิ่ม
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

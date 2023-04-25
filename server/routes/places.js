@@ -6,7 +6,7 @@ const { searchPlace, getPlace, getDurations } = require('../controllers/placeCon
 const router = express.Router()
 
 // Search places
-router.get('/', searchPlace)
+router.get('/search', searchPlace)
 
 // GET each duration
 router.get('/duration', getDurations)

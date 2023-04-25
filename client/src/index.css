@@ -2,10 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Kanit&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kanit&family=Tilt+Warp&display=swap');
+
+@font-face {
+  font-family: 'Blanch Sage'; /*Can be any text*/
+  src: local('Blanch Sage'), url('./assets/fonts/Blanch\ Sage.ttf') format('truetype');
+}
 
 * {
   font-family: 'Kanit', sans-serif;
+}
+
+#nav-logo {
+  font-family: 'Tilt Warp', cursive;
+}
+
+#header-logo {
+  font-family: 'Blanch Sage';
 }
 
 a,

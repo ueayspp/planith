@@ -1,7 +1,5 @@
-import { useState, useContext } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-import { UserContext } from '../contexts/UserContext'
 
 // datepicker
 import dayjs from 'dayjs'
@@ -56,23 +54,28 @@ function Hero() {
 
   return (
     <div>
-      {showAlert && <AlertMessage message="เกิดข้อผิดพลาด !" color="failure" />}
+      {showAlert && <AlertMessage message="กรุณาป้อนข้อมูลให้ครบถ้วน" color="failure" />}
 
-      <form onSubmit={handleSubmit}>
-        <TextInput
-          type="number"
-          min={1}
-          placeholder="กรุณาใส่จำนวนผู้เดินทาง"
-          onChange={(event) => setGuest(event.target.value)}
-        />
-        <Datepicker
-          value={value}
-          onChange={handleValueChange}
-          separator={'-'}
-          placeholder={'กรุณาใส่วันเดินทาง'}
-          displayFormat={'DD/MM/YYYY'}
-        />
-        <Button color="dark" type="submit">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex flex-col w-auto justify-center gap-1">
+          <TextInput
+            type="number"
+            min={1}
+            placeholder="กรุณาใส่จำนวนผู้เดินทาง"
+            onChange={(event) => setGuest(event.target.value)}
+          />
+          <Datepicker
+            primaryColor={'orange'}
+            value={value}
+            useRange={false}
+            startFrom={new Date()}
+            onChange={handleValueChange}
+            placeholder={'กรุณาใส่วันเดินทาง'}
+            displayFormat={'DD/MM/YYYY'}
+            readOnly
+          />
+        </div>
+        <Button className="bg-hunter-green hover:bg-dark-green" type="submit">
           เริ่มแพลนกันเลย !
         </Button>
       </form>
