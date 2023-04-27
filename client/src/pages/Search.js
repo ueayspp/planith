@@ -56,7 +56,6 @@ function Search() {
         const response = await axios.get('/api/places/search', { params })
         setPlaces(response.data.results)
         setNextPageToken(response.data.nextPageToken)
-        console.log(nextPageToken)
         setLoading(false)
       } catch (error) {
         console.log(error)
@@ -264,7 +263,7 @@ function Search() {
               id="query"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="เช่น กรุงเทพ"
+              placeholder="เช่น น้ำตก, ที่พัก, ร้านอาหารในกรุงเทพ"
             />
             <Button className="bg-orange-700 hover:bg-orange-800" type="submit">
               ค้นหา

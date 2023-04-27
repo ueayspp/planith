@@ -9,13 +9,14 @@ const DIRECTIONS_URL = 'https://maps.googleapis.com/maps/api/directions/json'
 
 // Search a place
 const searchPlace = async (req, res) => {
-  const input = req.query.input
+  const query = req.query.input
   const pagetoken = req.query.pagetoken
 
   const params = {
     key: API_KEY,
-    input: input,
-    type: 'tourist_attraction',
+    input: query,
+    // type: 'tourist_attraction|cafe|lodging',
+    region: 'th',
     language: 'th',
   }
 
