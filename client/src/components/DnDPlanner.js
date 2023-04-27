@@ -2,7 +2,7 @@ import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 
 import { Badge, Button, Rating, Timeline } from 'flowbite-react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
@@ -75,6 +75,26 @@ function DnDPlanner() {
     }
   }
 
+  // Define a function to calculate the distance between two points using the Haversine formula
+  function distance(lat1, lon1, lat2, lon2) {
+    const R = 6371 // Earth's radius in kilometers
+    const dLat = toRadians(lat2 - lat1)
+    const dLon = toRadians(lon2 - lon1)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c // Distance in kilometers
+  }
+
+  // Define a function to convert degrees to radians
+  function toRadians(degrees) {
+    return (degrees * Math.PI) / 180
+  }
+
   // Create planner
   function createPlanner() {
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan'))
@@ -85,28 +105,121 @@ function DnDPlanner() {
     const cart = tripPlanData.cart
 
     const diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
-    const itemsPerDay = Math.ceil(tripPlanData.cart.length / diffDays)
+
+    function groupPlacesByKMeans(places, k) {
+      const seedrandom = require('seedrandom')
+      // Initialize the random number generator with a seed
+      const rng = seedrandom(3)
+
+      // Extract the coordinates of each place
+      const coords = places.map((place) => [
+        place.geometry.location.lat,
+        place.geometry.location.lng,
+      ])
+
+      // Initialize the centroids randomly
+      const centroids = []
+      for (let i = 0; i < k; i++) {
+        const randIndex = Math.floor(rng() * coords.length)
+        centroids.push(coords[randIndex])
+      }
+
+      // Assign each point to its closest centroid
+      const clusters = Array.from({ length: k }, () => [])
+      coords.forEach((coord) => {
+        let minDist = Infinity
+        let closestCentroidIndex = null
+
+        centroids.forEach((centroid, index) => {
+          const dist = distance(coord[0], coord[1], centroid[0], centroid[1])
+          if (dist < minDist) {
+            minDist = dist
+            closestCentroidIndex = index
+          }
+        })
+
+        clusters[closestCentroidIndex].push(coord)
+      })
+
+      // Recalculate the centroids based on the mean of each cluster
+      let converged = false
+      while (!converged) {
+        const newCentroids = []
+        clusters.forEach((cluster) => {
+          const meanCoord = cluster.reduce(
+            (acc, coord) => [acc[0] + coord[0], acc[1] + coord[1]],
+            [0, 0]
+          )
+          meanCoord[0] /= cluster.length
+          meanCoord[1] /= cluster.length
+          newCentroids.push(meanCoord)
+        })
+
+        // Check if the centroids have converged
+        converged = true
+        for (let i = 0; i < k; i++) {
+          if (
+            distance(centroids[i][0], centroids[i][1], newCentroids[i][0], newCentroids[i][1]) >
+            0.0001
+          ) {
+            converged = false
+            break
+          }
+        }
+
+        // Update the centroids and clusters
+        centroids.splice(0, centroids.length, ...newCentroids)
+        clusters.splice(0, clusters.length, ...Array.from({ length: k }, () => []))
+        coords.forEach((coord) => {
+          let minDist = Infinity
+          let closestCentroidIndex = null
+
+          centroids.forEach((centroid, index) => {
+            const dist = distance(coord[0], coord[1], centroid[0], centroid[1])
+            if (dist < minDist) {
+              minDist = dist
+              closestCentroidIndex = index
+            }
+          })
+
+          clusters[closestCentroidIndex].push(coord)
+        })
+      }
+
+      // Convert the clusters back to place objects
+      const result = clusters.map((cluster) =>
+        cluster.map((coord) => {
+          const place = places.find(
+            (p) => p.geometry.location.lat === coord[0] && p.geometry.location.lng === coord[1]
+          )
+          return [place, { time: '' }]
+        })
+      )
+
+      return result
+    }
+
+    const k = diffDays
+    const clusters = groupPlacesByKMeans(cart, k)
+    console.log('clusters', clusters) // Output: [ [ Place 1, Place 3 ], [ Place 2 ], [ Place 4 ] ]
 
     const itinerary = {}
 
-    // loop through each day and create an array of cart items with an empty time
-    for (let i = 0; i < diffDays; i++) {
-      // calculate the current day
-      const currentDay = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000)
-      // format the current day as "dayX"
-      const dayKey = dayjs(currentDay).locale('th').add(543, 'year').format('D MMMM YYYY')
-      // create an array for the cart items of the current day
-      itinerary[dayKey] = []
-
-      // loop through the cart items and add them to the result array for the current day
-      for (
-        let j = i * itemsPerDay;
-        j < (i + 1) * itemsPerDay && j < tripPlanData.cart.length;
-        j++
-      ) {
-        itinerary[dayKey].push([cart[j], { time: '' }])
-      }
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const dateString = dayjs(date).locale('th').add(543, 'year').format('D MMMM YYYY')
+      itinerary[dateString] = []
     }
+
+    for (let i = 0; i < clusters.length; i++) {
+      const dateString = dayjs(startDate)
+        .add(i, 'day')
+        .locale('th')
+        .add(543, 'year')
+        .format('D MMMM YYYY')
+      itinerary[dateString].push(...clusters[i])
+    }
+
+    console.log(itinerary)
 
     setItinerary(itinerary)
     tripPlanData.planner = itinerary
@@ -142,8 +255,6 @@ function DnDPlanner() {
     setTimeout(() => {
       setShowToast(false)
     }, 1000)
-
-    getDurations()
   }
 
   function deletePlanner() {
@@ -224,19 +335,22 @@ function DnDPlanner() {
   function handleDownload() {
     const div = divRef.current
 
-    div.style.display = 'block'
+    toPng(div)
+      .then(function (dataUrl) {
+        var link = document.createElement('a')
+        link.download = 'planner.png'
+        link.href = dataUrl
+        link.click()
+      })
+      .catch(function (error) {
+        console.error('Error:', error)
+      })
 
-    html2canvas(div, {
-      allowTaint: true,
-      useCORS: true,
-    }).then(function (canvas) {
-      const link = document.createElement('a')
-      link.download = 'planner.png'
-      link.href = canvas.toDataURL()
-      link.click()
-    })
+    div.style.visibility = 'visible'
 
-    div.style.display = 'none'
+    setTimeout(function () {
+      div.style.visibility = 'hidden' // hide the div after a certain amount of time
+    }, 2000)
   }
 
   return (
@@ -304,7 +418,7 @@ function DnDPlanner() {
                     </div>
                     <Timeline>
                       <Timeline.Item>
-                        <Timeline.Content className="space-y-2">
+                        <Timeline.Content className="space-y-4">
                           {itinerary[day].map((item, itemIndex) => (
                             <Draggable
                               key={item[0].place_id}
@@ -337,15 +451,15 @@ function DnDPlanner() {
                                       )}
                                     </div>
                                   </Timeline.Time>
-                                  <>
+                                  <div className="py-2">
                                     {item[0].photos && item[0].photos.length > 0 && (
                                       <img
                                         src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photoreference=${item[0].photos[0].photo_reference}&key=AIzaSyDGRFphLumw98ls5l02FfV3ppVA2nljW6o`}
                                         alt={item[0].name}
-                                        className="h-28 md:h-60 w-auto object-cover"
+                                        className="h-28 w-72 md:h-60 object-cover rounded-xl"
                                       />
                                     )}
-                                  </>
+                                  </div>
                                   <Timeline.Title>
                                     <Link to={`/places/${item[0].place_id}`}>{item[0].name}</Link>
                                   </Timeline.Title>
@@ -359,8 +473,12 @@ function DnDPlanner() {
                                     </Badge>
                                     <Rating>
                                       <Rating.Star />
-                                      <p>{item[0].rating}</p>
+                                      <p className="py-2">{item[0].rating}</p>
                                     </Rating>
+                                    <div className="w-72 py-2">
+                                      {' '}
+                                      <p>{item[0].formatted_address}</p>
+                                    </div>
                                   </Timeline.Body>
                                   <Button
                                     size="xs"
@@ -395,7 +513,7 @@ function DnDPlanner() {
         )}
       </div>
 
-      <div ref={divRef} style={{ display: 'none' }} className="p-4">
+      <div ref={divRef} style={{ visibility: 'hidden', backgroundColor: 'white' }} className="p-4">
         {itinerary
           ? Object.keys(itinerary).map((day, index) => (
               <div className="flex flex-col">
@@ -418,17 +536,18 @@ function DnDPlanner() {
                                   defaultValue={item[1].time}
                                   onBlur={() => handlePlaceTime(item[0])}
                                   onChange={(event) => setTime(event.target.value)}
+                                  className="w-full h-full"
                                 />
                               ) : (
                                 <input
                                   defaultValue={item[1].time}
                                   onBlur={() => handlePlaceTime(item[0])}
                                   onChange={(event) => setTime(event.target.value)}
+                                  className="w-full h-full"
                                 />
                               )}
                             </div>
                           </Timeline.Time>
-                          <br />
                           <Timeline.Title>
                             <p>{item[0].name}</p>
                           </Timeline.Title>
@@ -440,6 +559,10 @@ function DnDPlanner() {
                               <Rating.Star />
                               <p>{item[0].rating}</p>
                             </Rating>
+                            <div className="w-72 py-2">
+                              {' '}
+                              <p>{item[0].formatted_address}</p>
+                            </div>
                           </Timeline.Body>
                           {durations[day] && durations[day][itemIndex] && (
                             <div className="flex gap-2">

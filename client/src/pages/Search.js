@@ -6,6 +6,9 @@ import { Badge, Button, Card, Checkbox, Modal, Rating, TextInput } from 'flowbit
 
 import { PlusSmallIcon, SparklesIcon } from '@heroicons/react/24/solid'
 
+import dayjs from 'dayjs'
+import 'dayjs/locale/th'
+
 // components
 import Navbar from '../components/Navbar'
 import AlertMessage from '../components/AlertMessage'
@@ -33,6 +36,18 @@ function Search() {
 
   // checkbox
   const [checkboxItems, setCheckboxItems] = useState([])
+
+  const [tripPlan, setTripPlan] = useState([])
+  const [itinerary, setItinerary] = useState()
+  const [time, setTime] = useState()
+
+  useEffect(() => {
+    // Get tripPlanData from localStorage
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan'))
+    if (tripPlanData) {
+      setTripPlan(tripPlanData)
+    }
+  }, [])
 
   useEffect(() => {
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || []
@@ -90,27 +105,178 @@ function Search() {
     }
   }
 
+  // Define a function to calculate the distance between two points using the Haversine formula
+  function distance(lat1, lon1, lat2, lon2) {
+    const R = 6371 // Earth's radius in kilometers
+    const dLat = toRadians(lat2 - lat1)
+    const dLon = toRadians(lon2 - lon1)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c // Distance in kilometers
+  }
+
+  // Define a function to convert degrees to radians
+  function toRadians(degrees) {
+    return (degrees * Math.PI) / 180
+  }
+
+  // Create planner
+  function createPlanner() {
+    const tripPlanData = JSON.parse(localStorage.getItem('tripPlan'))
+
+    const startDate = new Date(tripPlanData.startDate)
+    const endDate = new Date(tripPlanData.endDate)
+
+    const cart = tripPlanData.cart
+
+    const diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+
+    function groupPlacesByKMeans(places, k) {
+      const seedrandom = require('seedrandom')
+      // Initialize the random number generator with a seed
+      const rng = seedrandom(3)
+
+      // Extract the coordinates of each place
+      const coords = places.map((place) => [
+        place.geometry.location.lat,
+        place.geometry.location.lng,
+      ])
+
+      // Initialize the centroids randomly
+      const centroids = []
+      for (let i = 0; i < k; i++) {
+        const randIndex = Math.floor(rng() * coords.length)
+        centroids.push(coords[randIndex])
+      }
+
+      // Assign each point to its closest centroid
+      const clusters = Array.from({ length: k }, () => [])
+      coords.forEach((coord) => {
+        let minDist = Infinity
+        let closestCentroidIndex = null
+
+        centroids.forEach((centroid, index) => {
+          const dist = distance(coord[0], coord[1], centroid[0], centroid[1])
+          if (dist < minDist) {
+            minDist = dist
+            closestCentroidIndex = index
+          }
+        })
+
+        clusters[closestCentroidIndex].push(coord)
+      })
+
+      // Recalculate the centroids based on the mean of each cluster
+      let converged = false
+      while (!converged) {
+        const newCentroids = []
+        clusters.forEach((cluster) => {
+          const meanCoord = cluster.reduce(
+            (acc, coord) => [acc[0] + coord[0], acc[1] + coord[1]],
+            [0, 0]
+          )
+          meanCoord[0] /= cluster.length
+          meanCoord[1] /= cluster.length
+          newCentroids.push(meanCoord)
+        })
+
+        // Check if the centroids have converged
+        converged = true
+        for (let i = 0; i < k; i++) {
+          if (
+            distance(centroids[i][0], centroids[i][1], newCentroids[i][0], newCentroids[i][1]) >
+            0.0001
+          ) {
+            converged = false
+            break
+          }
+        }
+
+        // Update the centroids and clusters
+        centroids.splice(0, centroids.length, ...newCentroids)
+        clusters.splice(0, clusters.length, ...Array.from({ length: k }, () => []))
+        coords.forEach((coord) => {
+          let minDist = Infinity
+          let closestCentroidIndex = null
+
+          centroids.forEach((centroid, index) => {
+            const dist = distance(coord[0], coord[1], centroid[0], centroid[1])
+            if (dist < minDist) {
+              minDist = dist
+              closestCentroidIndex = index
+            }
+          })
+
+          clusters[closestCentroidIndex].push(coord)
+        })
+      }
+
+      // Convert the clusters back to place objects
+      const result = clusters.map((cluster) =>
+        cluster.map((coord) => {
+          const place = places.find(
+            (p) => p.geometry.location.lat === coord[0] && p.geometry.location.lng === coord[1]
+          )
+          return [place, { time: '' }]
+        })
+      )
+
+      return result
+    }
+
+    const k = diffDays
+    const clusters = groupPlacesByKMeans(cart, k)
+    console.log('clusters', clusters) // [ [ Place 1, Place 3 ], [ Place 2 ], [ Place 4 ] ]
+
+    const itinerary = {}
+
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const dateString = dayjs(date).locale('th').add(543, 'year').format('D MMMM YYYY')
+      itinerary[dateString] = []
+    }
+
+    for (let i = 0; i < clusters.length; i++) {
+      const dateString = dayjs(startDate)
+        .add(i, 'day')
+        .locale('th')
+        .add(543, 'year')
+        .format('D MMMM YYYY')
+      itinerary[dateString].push(...clusters[i])
+    }
+
+    console.log(itinerary)
+
+    setItinerary(itinerary)
+    tripPlanData.planner = itinerary
+    localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+  }
+
   // Select Place
   function handleSelect(place) {
     const tripPlanData = JSON.parse(localStorage.getItem('tripPlan')) || {}
 
     // Check if the planner already create or not
-    // If create already, add new place to cart and last day of planner
+    // If create already, add new place to cart and createPlanner()
     if (tripPlanData.planner) {
-      // Access the last key in the "planner" object
-      const keys = Object.keys(tripPlanData.planner)
-      const lastKey = keys[keys.length - 1]
-      // Update the new selected place data to the cart
-      const updatedSelectedPlace = [...tripPlanData.cart, place]
-      tripPlanData.cart = updatedSelectedPlace
+      tripPlanData.cart = tripPlanData.cart || []
 
-      // Push the new item to the last key in the planner object
-      tripPlanData.planner[lastKey].push([place, { time: '' }])
+      // Add the selected place to the cart
+      const updatedSelectedPlace = [...tripPlanData.cart, place]
+
+      // Update the selected place data
+      tripPlanData.cart = updatedSelectedPlace
 
       // Update state and localStorage
       setSelectedPlace(updatedSelectedPlace)
       setNumSelectedPlaces(updatedSelectedPlace.length)
       localStorage.setItem('tripPlan', JSON.stringify(tripPlanData))
+
+      createPlanner()
     } else {
       tripPlanData.cart = tripPlanData.cart || []
 
@@ -237,9 +403,9 @@ function Search() {
   }
 
   return (
-    <div className="h-screen bg-almond-beige">
+    <div>
       <Navbar />
-      <div className="p-8 space-y-2 md:px-20 md:space-y-8 bg-almond-beige">
+      <div className="p-8 space-y-2 md:px-20 md:space-y-8">
         {showAlert && <AlertMessage message="กรุณากรอกสถานที่" color="failure" />}
         {showToast && <ToastMessage method={method} />}
 
@@ -314,7 +480,7 @@ function Search() {
         {loading ? (
           <p>กำลังโหลด...</p>
         ) : (
-          <div className="h-fit bg-almond-beige">
+          <div>
             <div className="mt-8 grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {places.map((place) => (
                 <Card className="flex" key={place.place_id}>
@@ -326,6 +492,11 @@ function Search() {
                     />
                   )}
                   <Link to={`/places/${place.place_id}`}>{place.name}</Link>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge className="rounded-full" color="gray">
+                      {place.types[0]}
+                    </Badge>
+                  </div>
                   <Rating>
                     <Rating.Star />
                     <p>{place.rating}</p>
