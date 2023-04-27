@@ -37,6 +37,37 @@ const searchPlace = async (req, res) => {
     })
 }
 
+// Search for multiple types of places
+// const searchPlace = async (req, res) => {
+//   const query = req.query.input
+
+//   // Define an array of place types to search for
+//   const types = ['tourist_attraction', 'cafe', 'lodging']
+
+//   // Create an empty array to store the search results
+//   let results = []
+
+//   // Loop through each type of place and retrieve all the search results
+//   for (const type of types) {
+//     let nextPageToken = ''
+//     do {
+//       const params = {
+//         key: API_KEY,
+//         input: query,
+//         type,
+//         region: 'th',
+//         language: 'th',
+//         pagetoken: nextPageToken,
+//       }
+//       const response = await axios.get(TEXT_SEARCH_URL, { params })
+//       results = results.concat(response.data.results)
+//       nextPageToken = response.data.next_page_token || ''
+//     } while (nextPageToken)
+//   }
+
+//   res.send({ results })
+// }
+
 // Get a place
 const getPlace = async (req, res) => {
   const place_id = req.query.place_id
