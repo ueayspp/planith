@@ -1,4 +1,4 @@
-# planith
+# Planith
 
 Planith is a web application designed for seamless trip planning. It allows users to create personalized itineraries, discover popular attractions, and find accommodations in their desired destinations.
 
@@ -21,7 +21,7 @@ Planith is a web application designed for seamless trip planning. It allows user
 ## APIs Integrated
 
 - Google Places API
-- Google Direactions API
+- Google Directions API
 
 ## Machine Learning Integration
 
